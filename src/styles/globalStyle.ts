@@ -1,12 +1,5 @@
 import { createGlobalStyle } from 'styled-components'
-import type { DefaultTheme } from 'styled-components'
-
-declare module 'styled-components' {
-  export interface DefaultTheme {
-    appBackground: string
-    appColor: string
-  }
-}
+import { DefaultTheme } from 'styled-components'
 
 export const GlobalStyle = createGlobalStyle<{ theme?: DefaultTheme }>`
   body, html {
