@@ -8,7 +8,9 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@*": ["src/*"]
+      "@/*": ["src/*"],
+      "@components": ["src/components/index"],
+      "@components/*": ["src/components/*"]
     },
 
     "moduleResolution": "bundler",
