@@ -2,5 +2,7 @@ import 'styled-components'
 import type { Theme } from '@/types'
 
 declare module 'styled-components' {
-  export interface DefaultTheme extends Theme {}
+  export interface DefaultTheme extends Theme {
+    readonly __styledComponentsThemeBrand?: never
+  }
 }
