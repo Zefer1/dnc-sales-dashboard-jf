@@ -22,7 +22,7 @@ const TableWrapper = styled.div`
 	   }
          th {
          color: ${(props) => props.theme.typographies.subtitle};
-         font-wight: 600;
+		    font-weight: 600;
     }
 
      tr {

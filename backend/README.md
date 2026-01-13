@@ -21,9 +21,22 @@ copy .env.example .env
 npm run dev
 ```
 
-Endpoints:
+## Testes
+
+```bash
+npm test
+```
+
+## Endpoints
+
 - `GET /health`
+- `POST /api/register`
 - `POST /api/login`
+- `GET /api/profile` (Bearer)
+- `GET /api/leads` (Bearer)
+- `POST /api/leads/create` (Bearer)
+- `PUT /api/leads/update` (Bearer)
+- `DELETE /api/leads/delete` (Bearer)
 
 Body do login:
 ```json
