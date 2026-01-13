@@ -101,6 +101,9 @@ function Header() {
 										<MenuItem component={Link} to="/leads" onClick={closeMenu}>
 											Leads
 										</MenuItem>
+										<MenuItem component={Link} to="/audit" onClick={closeMenu}>
+											Auditoria
+										</MenuItem>
 										<MenuItem component={Link} to="/perfil" onClick={closeMenu}>
 											Perfil
 										</MenuItem>
@@ -140,6 +143,7 @@ function Header() {
 								<>
 									<NavItem to="/home">Home</NavItem>
 									<NavItem to="/leads">Leads</NavItem>
+									<NavItem to="/audit">Auditoria</NavItem>
 									<NavItem to="/perfil">Perfil</NavItem>
 
 									<Tooltip title="Alternar tema" arrow>

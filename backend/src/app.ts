@@ -80,6 +80,42 @@ const leadUpdateSchema = z.object({
   source: z.string().min(1).nullable().optional(),
 })
 
+const leadImportSchema = z.object({
+  leads: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        contact: z.string().min(1).nullable().optional(),
+        source: z.string().min(1).nullable().optional(),
+      })
+    )
+    .min(1)
+    .max(2000),
+  mode: z.enum(['always_create', 'skip_exact_duplicates']).optional(),
+})
+
+async function logAuditEvent(params: {
+  userId: number
+  action: string
+  entityType: string
+  entityId?: number | null
+  before?: unknown
+  after?: unknown
+  metadata?: unknown
+}) {
+  await prisma.auditEvent.create({
+    data: {
+      userId: params.userId,
+      action: params.action,
+      entityType: params.entityType,
+      entityId: params.entityId ?? null,
+      before: params.before ?? undefined,
+      after: params.after ?? undefined,
+      metadata: params.metadata ?? undefined,
+    },
+  })
+}
+
 app.post('/api/register', async (req, res) => {
   const jwtSecret = process.env.JWT_SECRET
   if (!jwtSecret) {
@@ -184,7 +220,100 @@ app.post('/api/leads/create', auth, async (req, res) => {
     select: { id: true, name: true, contact: true, source: true, createdAt: true },
   })
 
+  await logAuditEvent({
+    userId,
+    action: 'LEAD_CREATE',
+    entityType: 'Lead',
+    entityId: lead.id,
+    after: lead,
+    metadata: { leadName: lead.name },
+  })
+
   return res.status(201).json({ lead })
+})
+
+app.post('/api/leads/import', auth, async (req, res) => {
+  const userId = res.locals.userId as number
+  const parsed = leadImportSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
+  }
+
+  const mode = parsed.data.mode ?? 'always_create'
+  const normalized = parsed.data.leads.map((l) => ({
+    name: l.name.trim(),
+    contact: l.contact === undefined ? undefined : l.contact?.trim() ?? null,
+    source: l.source === undefined ? undefined : l.source?.trim() ?? null,
+  }))
+
+  let toCreate = normalized
+  let skipped = 0
+
+  if (mode === 'skip_exact_duplicates') {
+    interface ExistingLead {
+      name: string;
+      contact: string | null;
+      source: string | null;
+    }
+
+    const existing: ExistingLead[] = await prisma.lead.findMany({
+      where: { userId },
+      select: { name: true, contact: true, source: true },
+    })
+
+    interface KeyLead {
+      name: string;
+      contact: string | null;
+      source: string | null;
+    }
+
+    const keyOf = (lead: KeyLead) =>
+      `${lead.name.toLowerCase()}|${(lead.contact ?? '').toLowerCase()}|${(lead.source ?? '').toLowerCase()}`
+
+    const existingKeys: Set<string> = new Set(existing.map((l) => keyOf({ name: l.name, contact: l.contact ?? null, source: l.source ?? null })))
+
+    const next: typeof normalized = []
+    for (const lead of normalized) {
+      const key = keyOf({ name: lead.name, contact: lead.contact ?? null, source: lead.source ?? null })
+      if (existingKeys.has(key)) {
+        skipped += 1
+        continue
+      }
+      existingKeys.add(key)
+      next.push(lead)
+    }
+    toCreate = next
+  }
+
+  const created = toCreate.length
+  if (created > 0) {
+    await prisma.lead.createMany({
+      data: toCreate.map((l) => ({
+        userId,
+        name: l.name,
+        contact: l.contact ?? undefined,
+        source: l.source ?? undefined,
+      })),
+    })
+  }
+
+  await logAuditEvent({
+    userId,
+    action: 'LEAD_IMPORT',
+    entityType: 'Lead',
+    metadata: {
+      received: normalized.length,
+      created,
+      skipped,
+      mode,
+    },
+  })
+
+  return res.status(200).json({
+    received: normalized.length,
+    created,
+    skipped,
+  })
 })
 
 app.delete('/api/leads/delete', auth, async (req, res) => {
@@ -194,12 +323,24 @@ app.delete('/api/leads/delete', auth, async (req, res) => {
     return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   }
 
-  const lead = await prisma.lead.findFirst({ where: { id: parsed.data.id, userId }, select: { id: true } })
+  const lead = await prisma.lead.findFirst({
+    where: { id: parsed.data.id, userId },
+    select: { id: true, name: true, contact: true, source: true, createdAt: true },
+  })
   if (!lead) {
     return res.status(404).json({ error: 'Lead not found' })
   }
 
   await prisma.lead.delete({ where: { id: parsed.data.id } })
+
+  await logAuditEvent({
+    userId,
+    action: 'LEAD_DELETE',
+    entityType: 'Lead',
+    entityId: lead.id,
+    before: lead,
+    metadata: { leadName: lead.name },
+  })
   return res.status(200).json({ success: true })
 })
 
@@ -212,7 +353,7 @@ app.put('/api/leads/update', auth, async (req, res) => {
 
   const existing = await prisma.lead.findFirst({
     where: { id: parsed.data.id, userId },
-    select: { id: true },
+    select: { id: true, name: true, contact: true, source: true, createdAt: true },
   })
   if (!existing) {
     return res.status(404).json({ error: 'Lead not found' })
@@ -228,7 +369,41 @@ app.put('/api/leads/update', auth, async (req, res) => {
     select: { id: true, name: true, contact: true, source: true, createdAt: true },
   })
 
+  await logAuditEvent({
+    userId,
+    action: 'LEAD_UPDATE',
+    entityType: 'Lead',
+    entityId: lead.id,
+    before: existing,
+    after: lead,
+    metadata: { leadName: lead.name },
+  })
+
   return res.status(200).json({ lead })
+})
+
+app.get('/api/audit', auth, async (req, res) => {
+  const userId = res.locals.userId as number
+  const takeRaw = req.query.take
+  const take = Math.max(1, Math.min(200, Number(takeRaw ?? 50)))
+
+  const events = await prisma.auditEvent.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take,
+    select: {
+      id: true,
+      createdAt: true,
+      action: true,
+      entityType: true,
+      entityId: true,
+      before: true,
+      after: true,
+      metadata: true,
+    },
+  })
+
+  return res.status(200).json({ events })
 })
 
 app.get('/api/dashboard/summary', auth, async (_req, res) => {

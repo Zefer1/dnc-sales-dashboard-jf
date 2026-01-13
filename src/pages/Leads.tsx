@@ -1,10 +1,26 @@
 import { CardComponent, CustomTable, StyledH1, StyledP, StyledInput } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
+import { useToast } from '@/contexts/ToastContext'
 import { pxToRem } from '@/utils'
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip } from '@mui/material'
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Tooltip,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+} from '@mui/material'
 import axios from 'axios'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import Papa from 'papaparse'
+import * as XLSX from 'xlsx'
 
 type Lead = {
   id: number
@@ -18,6 +34,12 @@ type LeadsResponse = { leads: Lead[] }
 type LeadCreateResponse = { lead: Lead }
 type LeadUpdateResponse = { lead: Lead }
 
+type LeadImportResponse = {
+  received: number
+  created: number
+  skipped: number
+}
+
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
   headers: { 'Content-Type': 'application/json' },
@@ -25,6 +47,7 @@ const api = axios.create({
 
 function Leads() {
   const auth = useContext(AuthContext)
+  const toast = useToast()
   const [searchParams] = useSearchParams()
 
   const createNameRef = useRef<HTMLInputElement | null>(null)
@@ -36,7 +59,6 @@ function Leads() {
   const [creating, setCreating] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
-  const [statusMessage, setStatusMessage] = useState<{ msg: string; type: 'error' | 'success' } | null>(null)
 
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
@@ -50,6 +72,11 @@ function Leads() {
   const [editContact, setEditContact] = useState('')
   const [editSource, setEditSource] = useState('')
 
+  const [importOpen, setImportOpen] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importMode, setImportMode] = useState<'always_create' | 'skip_exact_duplicates'>('skip_exact_duplicates')
+  const [importFile, setImportFile] = useState<File | null>(null)
+
   const authHeaders = useMemo(() => {
     const token = auth?.token
     return token ? { Authorization: `Bearer ${token}` } : {}
@@ -59,16 +86,15 @@ function Leads() {
     if (!auth?.token) return
 
     setLoading(true)
-    setStatusMessage(null)
     try {
       const response = await api.get<LeadsResponse>('/api/leads', { headers: authHeaders })
       setLeads(response.data.leads)
     } catch {
-      setStatusMessage({ msg: 'Falha ao carregar leads', type: 'error' })
+      toast.showToast('Falha ao carregar leads', 'error')
     } finally {
       setLoading(false)
     }
-  }, [auth?.token, authHeaders])
+  }, [auth?.token, authHeaders, toast])
 
   useEffect(() => {
     void loadLeads()
@@ -112,12 +138,11 @@ function Leads() {
 
     const trimmedName = name.trim()
     if (!trimmedName) {
-      setStatusMessage({ msg: 'Nome é obrigatório', type: 'error' })
+      toast.showToast('Nome é obrigatório', 'error')
       return
     }
 
     setCreating(true)
-    setStatusMessage(null)
     try {
       const response = await api.post<LeadCreateResponse>(
         '/api/leads/create',
@@ -133,9 +158,9 @@ function Leads() {
       setName('')
       setContact('')
       setSource('')
-      setStatusMessage({ msg: 'Lead criada com sucesso', type: 'success' })
+      toast.showToast('Lead criada com sucesso', 'success')
     } catch {
-      setStatusMessage({ msg: 'Falha ao criar lead', type: 'error' })
+      toast.showToast('Falha ao criar lead', 'error')
     } finally {
       setCreating(false)
     }
@@ -144,16 +169,15 @@ function Leads() {
   const handleDelete = async (id: number) => {
     if (!auth?.token) return
     setDeletingId(id)
-    setStatusMessage(null)
     try {
       await api.delete('/api/leads/delete', {
         headers: authHeaders,
         data: { id },
       })
       setLeads((prev) => prev.filter((l) => l.id !== id))
-      setStatusMessage({ msg: 'Lead removida', type: 'success' })
+      toast.showToast('Lead removida', 'success')
     } catch {
-      setStatusMessage({ msg: 'Falha ao remover lead', type: 'error' })
+      toast.showToast('Falha ao remover lead', 'error')
     } finally {
       setDeletingId(null)
     }
@@ -181,12 +205,11 @@ function Leads() {
 
     const trimmedName = editName.trim()
     if (!trimmedName) {
-      setStatusMessage({ msg: 'Nome é obrigatório', type: 'error' })
+      toast.showToast('Nome é obrigatório', 'error')
       return
     }
 
     setUpdatingId(editingLead.id)
-    setStatusMessage(null)
     try {
       const response = await api.put<LeadUpdateResponse>(
         '/api/leads/update',
@@ -201,12 +224,157 @@ function Leads() {
 
       const updated = response.data.lead
       setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)))
-      setStatusMessage({ msg: 'Lead atualizada', type: 'success' })
+      toast.showToast('Lead atualizada', 'success')
       closeEdit()
     } catch {
-      setStatusMessage({ msg: 'Falha ao atualizar lead', type: 'error' })
+      toast.showToast('Falha ao atualizar lead', 'error')
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  const openImport = () => {
+    setImportFile(null)
+    setImportMode('skip_exact_duplicates')
+    setImportOpen(true)
+  }
+
+  const closeImport = () => {
+    if (importing) return
+    setImportOpen(false)
+    setImportFile(null)
+  }
+
+  const exportCsv = async () => {
+    if (!leads.length) {
+      toast.showToast('Sem leads para exportar', 'info')
+      return
+    }
+
+    const rowsToExport = leads.map((l) => ({
+      name: l.name,
+      contact: l.contact ?? '',
+      source: l.source ?? '',
+      createdAt: l.createdAt,
+    }))
+    const csv = Papa.unparse(rowsToExport)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const date = new Date().toISOString().slice(0, 10)
+    a.href = url
+    a.download = `leads-${date}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.showToast('CSV exportado', 'success')
+  }
+
+  const exportExcel = async () => {
+    if (!leads.length) {
+      toast.showToast('Sem leads para exportar', 'info')
+      return
+    }
+
+    const rowsToExport = leads.map((l) => ({
+      name: l.name,
+      contact: l.contact ?? '',
+      source: l.source ?? '',
+      createdAt: l.createdAt,
+    }))
+
+    const sheet = XLSX.utils.json_to_sheet(rowsToExport)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, sheet, 'Leads')
+    const date = new Date().toISOString().slice(0, 10)
+    XLSX.writeFile(wb, `leads-${date}.xlsx`)
+    toast.showToast('Excel exportado', 'success')
+  }
+
+  const parseImportedRows = (rows: Array<Record<string, unknown>>) => {
+    const findKey = (obj: Record<string, unknown>, candidates: string[]) => {
+      const keys = Object.keys(obj)
+      const hit = keys.find((k) => candidates.includes(k.trim().toLowerCase()))
+      return hit
+    }
+
+    const readString = (value: unknown) => {
+      if (value === null || value === undefined) return ''
+      return String(value).trim()
+    }
+
+    const parsed = rows
+      .map((row) => {
+        const nameKey = findKey(row, ['name', 'nome'])
+        const contactKey = findKey(row, ['contact', 'contato'])
+        const sourceKey = findKey(row, ['source', 'origem'])
+
+        const nameValue = readString(nameKey ? row[nameKey] : undefined)
+        const contactValue = readString(contactKey ? row[contactKey] : undefined)
+        const sourceValue = readString(sourceKey ? row[sourceKey] : undefined)
+
+        return {
+          name: nameValue,
+          contact: contactValue ? contactValue : null,
+          source: sourceValue ? sourceValue : null,
+        }
+      })
+      .filter((l) => l.name)
+
+    return parsed
+  }
+
+  const importLeads = async () => {
+    if (!auth?.token) return
+    if (!importFile) {
+      toast.showToast('Selecione um arquivo CSV ou XLSX', 'error')
+      return
+    }
+
+    setImporting(true)
+    try {
+      let parsedLeads: Array<{ name: string; contact: string | null; source: string | null }> = []
+
+      if (importFile.name.toLowerCase().endsWith('.csv')) {
+        const text = await importFile.text()
+        const result = Papa.parse<Record<string, unknown>>(text, { header: true, skipEmptyLines: true })
+        if (result.errors?.length) {
+          throw new Error(result.errors[0]?.message ?? 'Falha ao ler CSV')
+        }
+        parsedLeads = parseImportedRows(result.data)
+      } else if (importFile.name.toLowerCase().endsWith('.xlsx')) {
+        const buf = await importFile.arrayBuffer()
+        const workbook = XLSX.read(buf)
+        const sheetName = workbook.SheetNames[0]
+        const sheet = workbook.Sheets[sheetName]
+        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
+        parsedLeads = parseImportedRows(rows)
+      } else {
+        toast.showToast('Formato não suportado. Use .csv ou .xlsx', 'error')
+        return
+      }
+
+      if (!parsedLeads.length) {
+        toast.showToast('Nenhuma lead válida encontrada no arquivo', 'error')
+        return
+      }
+
+      const response = await api.post<LeadImportResponse>(
+        '/api/leads/import',
+        { leads: parsedLeads, mode: importMode },
+        { headers: authHeaders }
+      )
+
+      toast.showToast(
+        `Importação concluída: ${response.data.created} criada(s), ${response.data.skipped} ignorada(s)`,
+        'success'
+      )
+      closeImport()
+      await loadLeads()
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Falha ao importar leads'
+      toast.showToast(message, 'error')
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -356,17 +524,50 @@ function Leads() {
         </Box>
       </Box>
 
-      {statusMessage ? (
-        <Box
-          sx={{
-            marginTop: pxToRem(12),
-            color: statusMessage.type === 'error' ? 'error.main' : 'success.main',
-          }}
-        >
-          {statusMessage.msg}
-        </Box>
-      ) : null}
     </CardComponent>
+
+    <Dialog open={importOpen} onClose={closeImport} fullWidth maxWidth="sm">
+      <DialogTitle>Importar leads</DialogTitle>
+      <DialogContent>
+        <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(8) }}>
+          <Box>
+            <input
+              type="file"
+              accept=".csv,.xlsx"
+              onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+              aria-label="Selecionar arquivo para importar"
+              disabled={importing}
+            />
+          </Box>
+
+          <FormControl>
+            <StyledP weight={600} size={14} lineheight={20}>
+              Modo
+            </StyledP>
+            <RadioGroup
+              value={importMode}
+              onChange={(e) => setImportMode(e.target.value as typeof importMode)}
+              aria-label="Modo de importação"
+            >
+              <FormControlLabel
+                value="skip_exact_duplicates"
+                control={<Radio />}
+                label="Ignorar duplicados exatos (nome + contato + origem)"
+              />
+              <FormControlLabel value="always_create" control={<Radio />} label="Sempre criar" />
+            </RadioGroup>
+          </FormControl>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={closeImport} disabled={importing}>
+          Cancelar
+        </Button>
+        <Button variant="contained" onClick={() => void importLeads()} disabled={importing || !importFile}>
+          {importing ? 'Importando…' : 'Importar'}
+        </Button>
+      </DialogActions>
+    </Dialog>
 
     <CardComponent>
       <Box
@@ -375,14 +576,38 @@ function Leads() {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: pxToRem(12),
+          flexWrap: 'wrap',
         }}
       >
         <StyledP weight={600} size={16} lineheight={24}>
           Lista
         </StyledP>
-        <Button variant="outlined" onClick={() => void loadLeads()} disabled={loading || !auth?.token}>
-          Atualizar
-        </Button>
+        <Box sx={{ display: 'inline-flex', gap: pxToRem(8), flexWrap: 'wrap' }}>
+          <Tooltip title="Exportar CSV" arrow>
+            <span>
+              <Button variant="outlined" onClick={() => void exportCsv()} disabled={loading || !auth?.token}>
+                Exportar CSV
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip title="Exportar Excel" arrow>
+            <span>
+              <Button variant="outlined" onClick={() => void exportExcel()} disabled={loading || !auth?.token}>
+                Exportar Excel
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip title="Importar CSV/XLSX" arrow>
+            <span>
+              <Button variant="outlined" onClick={openImport} disabled={loading || !auth?.token}>
+                Importar
+              </Button>
+            </span>
+          </Tooltip>
+          <Button variant="text" onClick={() => void loadLeads()} disabled={loading || !auth?.token}>
+            Atualizar
+          </Button>
+        </Box>
       </Box>
 
       <Box

@@ -54,6 +54,10 @@ describe('auth + leads CRUD', () => {
     const token = loginRes.body?.token as string
     expect(token).toBeTruthy()
 
+    const auditEmptyRes = await request(app).get('/api/audit').set('Authorization', `Bearer ${token}`)
+    expect(auditEmptyRes.status).toBe(200)
+    expect(Array.isArray(auditEmptyRes.body?.events)).toBe(true)
+
     const emptySummaryRes = await request(app).get('/api/dashboard/summary').set('Authorization', `Bearer ${token}`)
     expect(emptySummaryRes.status).toBe(200)
     expect(emptySummaryRes.body?.stats?.totalLeads).toBeTypeOf('number')
@@ -70,6 +74,27 @@ describe('auth + leads CRUD', () => {
     expect(createRes.status).toBe(201)
     const createdId = createRes.body?.lead?.id as number
     expect(createdId).toBeTruthy()
+
+    const importRes = await request(app)
+      .post('/api/leads/import')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        mode: 'skip_exact_duplicates',
+        leads: [
+          { name: 'Bob', contact: '111', source: 'Referral' },
+          { name: 'Bob', contact: '111', source: 'Referral' },
+        ],
+      })
+    expect(importRes.status).toBe(200)
+    expect(importRes.body?.received).toBe(2)
+    expect(importRes.body?.created).toBe(1)
+    expect(importRes.body?.skipped).toBe(1)
+
+    const auditRes = await request(app).get('/api/audit').set('Authorization', `Bearer ${token}`)
+    expect(auditRes.status).toBe(200)
+    const actions = (auditRes.body?.events as Array<{ action?: string }>).map((e) => e.action)
+    expect(actions.includes('LEAD_CREATE')).toBe(true)
+    expect(actions.includes('LEAD_IMPORT')).toBe(true)
 
     const summaryRes = await request(app).get('/api/dashboard/summary').set('Authorization', `Bearer ${token}`)
     expect(summaryRes.status).toBe(200)

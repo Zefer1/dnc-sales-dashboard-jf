@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import { Landing, Login, Registration, Home, Leads, Profile } from './pages'
+import { Landing, Login, Registration, Home, Leads, Profile, Audit } from './pages'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { AppLayout } from '@/layouts/AppLayout'
 
@@ -33,6 +33,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/audit"
+            element={
+              <ProtectedRoute>
+                <Audit />
               </ProtectedRoute>
             }
           />

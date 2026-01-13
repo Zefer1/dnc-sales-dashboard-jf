@@ -19,6 +19,8 @@ model User {
   updatedAt    DateTime @updatedAt
 
   leads Lead[]
+
+  auditEvents AuditEvent[]
 }
 
 model Lead {
@@ -33,4 +35,23 @@ model Lead {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model AuditEvent {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action     String
+  entityType String
+  entityId   Int?
+
+  before   Json?
+  after    Json?
+  metadata Json?
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
 }

@@ -1,5 +1,6 @@
 export { default as Home } from './Home'
 export { default as Leads } from './Leads'
+export { default as Audit } from './Audit'
 export { default as Landing } from './Landing'
 export { default as Login } from './Login'
 export { default as Profile } from './Profile'
