@@ -54,6 +54,15 @@ describe('auth + leads CRUD', () => {
     const token = loginRes.body?.token as string
     expect(token).toBeTruthy()
 
+    const emptySummaryRes = await request(app).get('/api/dashboard/summary').set('Authorization', `Bearer ${token}`)
+    expect(emptySummaryRes.status).toBe(200)
+    expect(emptySummaryRes.body?.stats?.totalLeads).toBeTypeOf('number')
+    expect(emptySummaryRes.body?.stats?.leadsThisMonth).toBeTypeOf('number')
+    expect(Array.isArray(emptySummaryRes.body?.recentLeads)).toBe(true)
+    expect(Array.isArray(emptySummaryRes.body?.leadsBySource)).toBe(true)
+    expect(Array.isArray(emptySummaryRes.body?.leadsByMonth?.labels)).toBe(true)
+    expect(Array.isArray(emptySummaryRes.body?.leadsByMonth?.data)).toBe(true)
+
     const createRes = await request(app)
       .post('/api/leads/create')
       .set('Authorization', `Bearer ${token}`)
@@ -61,6 +70,11 @@ describe('auth + leads CRUD', () => {
     expect(createRes.status).toBe(201)
     const createdId = createRes.body?.lead?.id as number
     expect(createdId).toBeTruthy()
+
+    const summaryRes = await request(app).get('/api/dashboard/summary').set('Authorization', `Bearer ${token}`)
+    expect(summaryRes.status).toBe(200)
+    expect(summaryRes.body?.stats?.totalLeads).toBeGreaterThanOrEqual(1)
+    expect(summaryRes.body?.recentLeads?.length).toBeGreaterThanOrEqual(1)
 
     const listRes = await request(app).get('/api/leads').set('Authorization', `Bearer ${token}`)
     expect(listRes.status).toBe(200)

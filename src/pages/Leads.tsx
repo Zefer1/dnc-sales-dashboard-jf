@@ -3,7 +3,8 @@ import { AuthContext } from '@/contexts/AuthContextValue'
 import { pxToRem } from '@/utils'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip } from '@mui/material'
 import axios from 'axios'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 type Lead = {
   id: number
@@ -24,6 +25,11 @@ const api = axios.create({
 
 function Leads() {
   const auth = useContext(AuthContext)
+  const [searchParams] = useSearchParams()
+
+  const createNameRef = useRef<HTMLInputElement | null>(null)
+  const createCardRef = useRef<HTMLDivElement | null>(null)
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false)
 
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(false)
@@ -67,6 +73,38 @@ function Leads() {
   useEffect(() => {
     void loadLeads()
   }, [loadLeads])
+
+  useEffect(() => {
+    const q = (searchParams.get('q') ?? '').trim()
+    if (q) setSearch(q)
+  }, [searchParams])
+
+  useEffect(() => {
+    if (deepLinkHandled) return
+
+    const focus = (searchParams.get('focus') ?? '').trim()
+    if (focus === 'new') {
+      setDeepLinkHandled(true)
+      setTimeout(() => {
+        createCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        createNameRef.current?.focus()
+      }, 0)
+    }
+  }, [deepLinkHandled, searchParams])
+
+  useEffect(() => {
+    if (deepLinkHandled) return
+
+    const editParam = (searchParams.get('edit') ?? '').trim()
+    const id = Number(editParam)
+    if (!editParam || Number.isNaN(id) || !leads.length) return
+
+    const lead = leads.find((l) => l.id === id)
+    if (!lead) return
+
+    setDeepLinkHandled(true)
+    openEdit(lead)
+  }, [deepLinkHandled, leads, searchParams])
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -280,7 +318,7 @@ function Leads() {
       </DialogActions>
     </Dialog>
 
-    <CardComponent>
+    <CardComponent ref={createCardRef}>
       <StyledP weight={600} size={16} lineheight={24}>
         Nova Lead
       </StyledP>
@@ -293,7 +331,13 @@ function Leads() {
             alignItems: 'center',
           }}
         >
-          <StyledInput placeholder="Nome" value={name} aria-label="Nome" onChange={(e) => setName(e.target.value)} />
+          <StyledInput
+            ref={createNameRef}
+            placeholder="Nome"
+            value={name}
+            aria-label="Nome"
+            onChange={(e) => setName(e.target.value)}
+          />
           <StyledInput
             placeholder="Contato (opcional)"
             value={contact}

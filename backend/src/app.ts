@@ -231,4 +231,80 @@ app.put('/api/leads/update', auth, async (req, res) => {
   return res.status(200).json({ lead })
 })
 
+app.get('/api/dashboard/summary', auth, async (_req, res) => {
+  const userId = res.locals.userId as number
+
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const [totalLeads, leadsThisMonth, recentLeads, groupedBySource] = await Promise.all([
+    prisma.lead.count({ where: { userId } }),
+    prisma.lead.count({ where: { userId, createdAt: { gte: startOfMonth } } }),
+    prisma.lead.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true, name: true, contact: true, source: true, createdAt: true },
+    }),
+    prisma.lead.groupBy({
+      by: ['source'],
+      where: { userId },
+      _count: { _all: true },
+    }),
+  ])
+
+  interface GroupedBySourceRow {
+    source: string | null;
+    _count: { _all: number };
+  }
+  interface LeadBySource {
+    source: string;
+    count: number;
+  }
+
+  const leadsBySource: LeadBySource[] = (groupedBySource as GroupedBySourceRow[])
+    .map((row) => ({
+      source: row.source ?? 'Sem origem',
+      count: row._count._all,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+
+  const monthLabels: string[] = []
+  const monthStarts: Date[] = []
+  for (let offset = 4; offset >= 0; offset -= 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - offset, 1)
+    monthStarts.push(d)
+    monthLabels.push(d.toLocaleString('pt-BR', { month: 'short' }))
+  }
+
+  const oldestMonthStart = monthStarts[0]
+  const leadsSinceOldest = await prisma.lead.findMany({
+    where: { userId, createdAt: { gte: oldestMonthStart } },
+    select: { createdAt: true },
+  })
+
+  const monthCounts = new Array(monthStarts.length).fill(0) as number[]
+  for (const lead of leadsSinceOldest) {
+    const created = new Date(lead.createdAt)
+    const index = monthStarts.findIndex(
+      (m) => m.getFullYear() === created.getFullYear() && m.getMonth() === created.getMonth()
+    )
+    if (index >= 0) monthCounts[index] += 1
+  }
+
+  return res.status(200).json({
+    stats: {
+      totalLeads,
+      leadsThisMonth,
+    },
+    recentLeads,
+    leadsBySource,
+    leadsByMonth: {
+      labels: monthLabels,
+      data: monthCounts,
+    },
+  })
+})
+
 export default app
