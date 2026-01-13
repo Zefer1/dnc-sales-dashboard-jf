@@ -1,7 +1,7 @@
 import { CardComponent, CustomTable, StyledH1, StyledP, StyledInput } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { pxToRem } from '@/utils'
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip } from '@mui/material'
 import axios from 'axios'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
@@ -197,23 +197,33 @@ function Leads() {
         lead.source ?? '-',
         createdAtLabel,
         <Box key={lead.id} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Button
-            variant="text"
-            size="small"
-            disabled={deletingId === lead.id || updatingId === lead.id}
-            onClick={() => openEdit(lead)}
-          >
-            Editar
-          </Button>
-          <Button
-            variant="text"
-            color="error"
-            size="small"
-            disabled={deletingId === lead.id || updatingId === lead.id}
-            onClick={() => void handleDelete(lead.id)}
-          >
-            {deletingId === lead.id ? 'Excluindo…' : 'Excluir'}
-          </Button>
+          <Tooltip title="Editar lead" arrow>
+            <span>
+              <Button
+                variant="text"
+                size="small"
+                disabled={deletingId === lead.id || updatingId === lead.id}
+                onClick={() => openEdit(lead)}
+                aria-label={`Editar lead ${lead.name}`}
+              >
+                Editar
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip title="Excluir lead" arrow>
+            <span>
+              <Button
+                variant="text"
+                color="error"
+                size="small"
+                disabled={deletingId === lead.id || updatingId === lead.id}
+                onClick={() => void handleDelete(lead.id)}
+                aria-label={`Excluir lead ${lead.name}`}
+              >
+                {deletingId === lead.id ? 'Excluindo…' : 'Excluir'}
+              </Button>
+            </span>
+          </Tooltip>
         </Box>,
       ]
     })
@@ -236,15 +246,22 @@ function Leads() {
             marginTop: pxToRem(8),
           }}
         >
-          <StyledInput placeholder="Nome" value={editName} onChange={(e) => setEditName(e.target.value)} />
+          <StyledInput
+            placeholder="Nome"
+            value={editName}
+            aria-label="Nome"
+            onChange={(e) => setEditName(e.target.value)}
+          />
           <StyledInput
             placeholder="Contato (opcional)"
             value={editContact}
+            aria-label="Contato"
             onChange={(e) => setEditContact(e.target.value)}
           />
           <StyledInput
             placeholder="Origem (opcional)"
             value={editSource}
+            aria-label="Origem"
             onChange={(e) => setEditSource(e.target.value)}
           />
         </Box>
@@ -276,15 +293,17 @@ function Leads() {
             alignItems: 'center',
           }}
         >
-          <StyledInput placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
+          <StyledInput placeholder="Nome" value={name} aria-label="Nome" onChange={(e) => setName(e.target.value)} />
           <StyledInput
             placeholder="Contato (opcional)"
             value={contact}
+            aria-label="Contato"
             onChange={(e) => setContact(e.target.value)}
           />
           <StyledInput
             placeholder="Origem (opcional)"
             value={source}
+            aria-label="Origem"
             onChange={(e) => setSource(e.target.value)}
           />
           <Button variant="contained" type="submit" disabled={creating || !auth?.token}>
@@ -335,12 +354,17 @@ function Leads() {
           <StyledInput
             placeholder="Buscar (nome, contato, origem)"
             value={search}
+            aria-label="Buscar leads"
             onChange={(e) => setSearch(e.target.value)}
           />
         </Box>
-        <Button variant="text" onClick={() => setSearch('')} disabled={!search.trim()}>
-          Limpar
-        </Button>
+        <Tooltip title="Limpar busca" arrow>
+          <span>
+            <Button variant="text" onClick={() => setSearch('')} disabled={!search.trim()}>
+              Limpar
+            </Button>
+          </span>
+        </Tooltip>
         <Box sx={{ color: '#666', fontSize: pxToRem(14) }}>
           {filteredLeads.length} / {leads.length}
         </Box>

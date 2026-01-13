@@ -11,8 +11,28 @@ export const StyledButton = styled.button<ButtonProps>`
     font-weight: bold;
     height: ${pxToRem(50)};
     padding: 0 ${pxToRem(16)};
-    transition: background-color 0.3s;
+    transition: background-color 0.2s, color 0.2s, transform 0.12s, box-shadow 0.12s;
     width: 100%;
+
+    &:focus-visible {
+        outline: 2px solid ${(props) => props.theme.buttons.primary};
+        outline-offset: 2px;
+    }
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &.inline {
+        height: ${pxToRem(40)};
+        padding: 0 ${pxToRem(12)};
+        width: auto;
+        font-size: ${pxToRem(14)};
+    }
 
     &.primary {
         background-color: ${(props) => props.theme.buttons.primary};
@@ -31,9 +51,9 @@ export const StyledButton = styled.button<ButtonProps>`
     }
 
     &.borderless-alert {
-        background-color: none;
+        background-color: transparent;
         color: ${(props) => props.theme.buttons.alert};
-        height: 0;
+        height: auto;
         padding: 0;
         &:hover {
             color: ${(props) => props.theme.buttons.alertHover};

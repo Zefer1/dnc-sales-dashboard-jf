@@ -8,13 +8,18 @@ export const StyledInput = styled.input<InputProps>`
 	border-radius: ${pxToRem(8)};
 	border: ${pxToRem(1)} solid ${(props) => props.theme.textInput.borderColor};
 	box-sizing: border-box;
-	cursor: pointer;
+	cursor: text;
 	height: ${pxToRem(40)};
 	font-size: ${pxToRem(14)};
 	font-weight: 500;
 	padding: ${pxToRem(8)} ${pxToRem(16)};
-	transition: background-color 0.3s;
+	transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 	width: 100%;
+
+	&:focus-visible {
+		outline: 2px solid ${(props) => props.theme.buttons.primary};
+		outline-offset: 2px;
+	}
 
 	&:disabled {
 		background-color: ${(props) => props.theme.textInput.disabled};
