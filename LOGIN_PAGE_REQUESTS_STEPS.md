@@ -1,6 +1,6 @@
-# Fluxo do Login — Preparação (branch + Axios + .env + hook)
+# Fluxo do Login — Preparação (Express local + Axios + env + hook)
 
-Este documento descreve os passos para começar a implementar o fluxo de login no frontend usando Axios e um hook `usePost`.
+Este documento descreve os passos para começar a implementar o fluxo de login no frontend usando Axios e um hook `usePost`, apontando para uma API Express local (já que a API original deixou de funcionar).
 
 ## 1) Criar uma branch a partir de `dev`
 
@@ -14,7 +14,40 @@ git checkout -b feat/login-page-requests
 
 > Objetivo: manter o trabalho do login isolado e fácil de revisar via Pull Request.
 
-## 2) Instalar Axios
+## 2) Criar e iniciar a API Express (backend)
+
+Cria uma pasta `backend/` na raiz do repo e inicializa o projeto (TypeScript):
+
+```bash
+mkdir backend
+cd backend
+npm init -y
+npm install express cors helmet bcrypt jsonwebtoken dotenv
+npm install -D typescript ts-node-dev @types/express @types/node @types/cors @types/jsonwebtoken
+```
+
+Depois:
+
+- Cria `backend/.env.example` (exemplo):
+
+```env
+PORT=3000
+JWT_SECRET=change-me
+DEMO_USER_EMAIL=user@ex.com
+DEMO_USER_PASSWORD=1234
+```
+
+- Cria `backend/src/server.ts` com um endpoint mínimo de login (`POST /api/login`).
+
+Arranca o backend:
+
+```bash
+npm run dev
+```
+
+> O backend deve ficar disponível em `http://localhost:3000`.
+
+## 3) Instalar Axios
 
 Na raiz do projeto (onde está o `package.json` do frontend):
 
@@ -22,19 +55,21 @@ Na raiz do projeto (onde está o `package.json` do frontend):
 npm install axios
 ```
 
-## 3) Criar a variável de ambiente `.env`
+## 4) Criar variáveis de ambiente no frontend
 
-Na raiz do frontend, cria (ou edita) o ficheiro `.env` com:
+Na raiz do frontend, cria o ficheiro `.env.example` com:
 
 ```env
-VITE_API_BASE_URL=
+VITE_API_BASE_URL=http://localhost:3000
 ```
 
 Preenche com o URL base da API (ex.: `http://localhost:3000` ou um domínio remoto).
 
-> Nota: o nome recomendado é `VITE_API_BASE_URL` (sem “L” extra) para bater com o hook abaixo e com a convenção do Vite.
+Depois, cria o teu `.env` local (não commitar) a partir do `.env.example` e ajusta se necessário.
 
-## 4) Criar `src/hooks/useAxiots.ts` com o código do hook
+> Nota: o nome recomendado é `VITE_API_BASE_URL` (sem “L” extra) porque o Vite só expõe variáveis com prefixo `VITE_`.
+
+## 5) Criar `src/hooks/useAxiots.ts` com o código do hook
 
 Cria a pasta `src/hooks` e dentro cria o ficheiro `useAxiots.ts` com este conteúdo:
 
