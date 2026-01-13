@@ -1,6 +1,6 @@
-# DNC Sales Dashboard (Frontend + Backend)
+# UrbanCRM (Frontend + Backend)
 
-Projeto full-stack para um dashboard com autenticação (JWT) e CRUD de Leads.
+Projeto full-stack para o UrbanCRM, com autenticação (JWT) e CRUD de Leads.
 
 ## Requisitos
 

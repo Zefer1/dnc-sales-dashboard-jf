@@ -1,6 +1,6 @@
-# dnc-sales-dashboard-api (backend)
+# UrbanCRM API (backend)
 
-API Express local para suportar o frontend do dashboard quando a API antiga não estiver disponível.
+API Express local para suportar o frontend do UrbanCRM.
 
 ## Setup
 
