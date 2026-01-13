@@ -69,7 +69,7 @@ function Home() {
     if (!recent.length) {
       return [
         {
-          avatar: '/dnc-avatar.svg',
+          avatar: '/urbancrm-avatar.svg',
           name: 'Nenhuma lead ainda',
           subtitle: 'Crie sua primeira lead para ver dados aqui',
         },
@@ -82,7 +82,7 @@ function Home() {
         .join(' • ')
 
       return {
-        avatar: '/dnc-avatar.svg',
+        avatar: '/urbancrm-avatar.svg',
         name: lead.name,
         subtitle: parts,
       }

@@ -168,8 +168,8 @@ function Header() {
 
 									<Link to="/perfil" aria-label="Abrir perfil">
 										<Avatar
-											alt="DNC Avatar"
-											src="/dnc-avatar.svg"
+											alt="UrbanCRM Avatar"
+											src="/urbancrm-avatar.svg"
 											sx={{ width: pxToRem(40), height: pxToRem(40) }}
 										/>
 									</Link>

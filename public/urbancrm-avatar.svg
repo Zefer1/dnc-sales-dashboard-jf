@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="UrbanCRM Avatar">
+  <title>UrbanCRM</title>
+  <circle cx="48" cy="48" r="46" fill="#0C70F2" />
+  <circle cx="48" cy="48" r="46" fill="none" stroke="#0B1020" stroke-opacity="0.15" stroke-width="2" />
+  <!-- skyline + U in white -->
+  <g transform="translate(18 22)" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 44V24" />
+    <path d="M16 44V16" />
+    <path d="M28 44V28" />
+    <path d="M40 44V20" />
+    <path d="M56 16v22c0 12-8 20-20 20s-20-8-20-20V16" />
+  </g>
+</svg>
