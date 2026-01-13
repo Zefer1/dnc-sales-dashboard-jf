@@ -1,6 +1,29 @@
 import request from 'supertest'
-import { describe, expect, it } from 'vitest'
-import app from '../app'
+import { beforeAll, describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+import { execSync } from 'node:child_process'
+
+let app: typeof import('express').default
+
+beforeAll(async () => {
+  // Create an isolated test DB and apply migrations.
+  process.env.NODE_ENV = 'test'
+  process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-secret'
+  process.env.FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+  process.env.DATABASE_URL = process.env.DATABASE_URL ?? 'file:./prisma/test.db'
+
+  const dbPath = path.join(process.cwd(), 'prisma', 'test.db')
+  if (fs.existsSync(dbPath)) fs.rmSync(dbPath)
+
+  execSync('npx prisma migrate deploy', {
+    stdio: 'inherit',
+    env: { ...process.env },
+  })
+
+  const mod = await import('../app')
+  app = mod.default
+})
 
 describe('health', () => {
   it('GET /health returns ok', async () => {
@@ -14,5 +37,53 @@ describe('auth', () => {
   it('GET /api/leads requires a Bearer token', async () => {
     const res = await request(app).get('/api/leads')
     expect(res.status).toBe(401)
+  })
+})
+
+describe('auth + leads CRUD', () => {
+  it('register -> login -> create/list/update/delete lead', async () => {
+    const email = `test-${Date.now()}@example.com`
+    const password = 'password123'
+
+    const registerRes = await request(app).post('/api/register').send({ email, password, name: 'Test' })
+    expect(registerRes.status).toBe(201)
+    expect(registerRes.body?.token).toBeTruthy()
+
+    const loginRes = await request(app).post('/api/login').send({ email, password })
+    expect(loginRes.status).toBe(200)
+    const token = loginRes.body?.token as string
+    expect(token).toBeTruthy()
+
+    const createRes = await request(app)
+      .post('/api/leads/create')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Alice', contact: '999', source: 'Instagram' })
+    expect(createRes.status).toBe(201)
+    const createdId = createRes.body?.lead?.id as number
+    expect(createdId).toBeTruthy()
+
+    const listRes = await request(app).get('/api/leads').set('Authorization', `Bearer ${token}`)
+    expect(listRes.status).toBe(200)
+    const leads = listRes.body?.leads as Array<{ id: number }>
+    expect(leads.some((l) => l.id === createdId)).toBe(true)
+
+    const updateRes = await request(app)
+      .put('/api/leads/update')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ id: createdId, name: 'Alice Updated', contact: null, source: 'Referral' })
+    expect(updateRes.status).toBe(200)
+    expect(updateRes.body?.lead?.name).toBe('Alice Updated')
+    expect(updateRes.body?.lead?.contact).toBe(null)
+
+    const deleteRes = await request(app)
+      .delete('/api/leads/delete')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ id: createdId })
+    expect(deleteRes.status).toBe(200)
+
+    const listRes2 = await request(app).get('/api/leads').set('Authorization', `Bearer ${token}`)
+    expect(listRes2.status).toBe(200)
+    const leads2 = listRes2.body?.leads as Array<{ id: number }>
+    expect(leads2.some((l) => l.id === createdId)).toBe(false)
   })
 })

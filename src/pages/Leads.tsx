@@ -36,6 +36,8 @@ function Leads() {
   const [contact, setContact] = useState('')
   const [source, setSource] = useState('')
 
+  const [search, setSearch] = useState('')
+
   const [editOpen, setEditOpen] = useState(false)
   const [editingLead, setEditingLead] = useState<Lead | null>(null)
   const [editName, setEditName] = useState('')
@@ -170,8 +172,20 @@ function Leads() {
     }
   }
 
+  const filteredLeads = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return leads
+
+    return leads.filter((lead) => {
+      const nameValue = lead.name.toLowerCase()
+      const contactValue = (lead.contact ?? '').toLowerCase()
+      const sourceValue = (lead.source ?? '').toLowerCase()
+      return nameValue.includes(q) || contactValue.includes(q) || sourceValue.includes(q)
+    })
+  }, [leads, search])
+
   const rows = useMemo(() => {
-    return leads.map((lead) => {
+    return filteredLeads.map((lead) => {
       const createdAt = new Date(lead.createdAt)
       const createdAtLabel = Number.isNaN(createdAt.getTime())
         ? lead.createdAt
@@ -203,7 +217,7 @@ function Leads() {
         </Box>,
       ]
     })
-  }, [leads, deletingId, updatingId])
+  }, [filteredLeads, deletingId, updatingId])
 
   return (
     <>
@@ -306,6 +320,30 @@ function Leads() {
         <Button variant="outlined" onClick={() => void loadLeads()} disabled={loading || !auth?.token}>
           Atualizar
         </Button>
+      </Box>
+
+      <Box
+        sx={{
+          marginTop: pxToRem(12),
+          display: 'flex',
+          gap: pxToRem(12),
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
+        <Box sx={{ flex: 1, minWidth: pxToRem(240) }}>
+          <StyledInput
+            placeholder="Buscar (nome, contato, origem)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </Box>
+        <Button variant="text" onClick={() => setSearch('')} disabled={!search.trim()}>
+          Limpar
+        </Button>
+        <Box sx={{ color: '#666', fontSize: pxToRem(14) }}>
+          {filteredLeads.length} / {leads.length}
+        </Box>
       </Box>
 
       <Box sx={{ marginTop: pxToRem(12) }}>
