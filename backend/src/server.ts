@@ -73,6 +73,13 @@ const leadDeleteSchema = z.object({
   id: z.number().int().positive(),
 })
 
+const leadUpdateSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().min(1),
+  contact: z.string().min(1).nullable().optional(),
+  source: z.string().min(1).nullable().optional(),
+})
+
 app.post('/api/register', async (req, res) => {
   const jwtSecret = process.env.JWT_SECRET
   if (!jwtSecret) {
@@ -188,6 +195,34 @@ app.delete('/api/leads/delete', auth, async (req, res) => {
 
   await prisma.lead.delete({ where: { id: parsed.data.id } })
   return res.status(200).json({ success: true })
+})
+
+app.put('/api/leads/update', auth, async (req, res) => {
+  const userId = res.locals.userId as number
+  const parsed = leadUpdateSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
+  }
+
+  const existing = await prisma.lead.findFirst({
+    where: { id: parsed.data.id, userId },
+    select: { id: true },
+  })
+  if (!existing) {
+    return res.status(404).json({ error: 'Lead not found' })
+  }
+
+  const lead = await prisma.lead.update({
+    where: { id: parsed.data.id },
+    data: {
+      name: parsed.data.name,
+      contact: parsed.data.contact === undefined ? undefined : parsed.data.contact,
+      source: parsed.data.source === undefined ? undefined : parsed.data.source,
+    },
+    select: { id: true, name: true, contact: true, source: true, createdAt: true },
+  })
+
+  return res.status(200).json({ lead })
 })
 
 const port = Number(process.env.PORT ?? 3000)

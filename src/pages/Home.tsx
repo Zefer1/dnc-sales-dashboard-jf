@@ -1,6 +1,5 @@
-import { AvatarsList, CardComponent, CustomTable, CustomChart, Header } from '@/components';
-import { Container } from '@mui/material';
-import { currencyConverter } from '@/utils';
+import { AvatarsList, CardComponent, CustomChart, CustomTable, StyledH1 } from '@/components'
+import { currencyConverter } from '@/utils'
 
 function Home() {
   const mockListData = [
@@ -44,26 +43,23 @@ function Home() {
 
   return (
     <>
-      <Header />
-      <Container maxWidth="lg">
-        <CardComponent>CARD</CardComponent>
-        <CardComponent> 
-          <AvatarsList listData={mockListData} />
-        </CardComponent>
-        <CardComponent>
-          <CustomTable headers={mockTableData.headers} rows={mockTableData.rows} />
-        </CardComponent>
-        <CardComponent>
-          <CustomChart 
-            labels={['Jan', 'Fev', 'Mar', 'Abr', 'Mai']}
-            data={[1000.12, 2456.54, 986.32, 654.89, 1234.56, 1750.00]}
-            type='bar'
-          />
-        </CardComponent>
-
-      </Container>
+      <StyledH1>Home</StyledH1>
+      <CardComponent>CARD</CardComponent>
+      <CardComponent>
+        <AvatarsList listData={mockListData} />
+      </CardComponent>
+      <CardComponent>
+        <CustomTable headers={mockTableData.headers} rows={mockTableData.rows} />
+      </CardComponent>
+      <CardComponent>
+        <CustomChart
+          labels={['Jan', 'Fev', 'Mar', 'Abr', 'Mai']}
+          data={[1000.12, 2456.54, 986.32, 654.89, 1234.56, 1750.0]}
+          type="bar"
+        />
+      </CardComponent>
     </>
-  );
+  )
 }
 
-export default Home;
+export default Home

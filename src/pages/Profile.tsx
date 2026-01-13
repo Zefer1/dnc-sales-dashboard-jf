@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { CardComponent, Header, StyledButton } from '@/components'
+import { CardComponent, StyledButton, StyledH1 } from '@/components'
 import { AppThemeContext } from '@/contexts/AppThemeContext'
 import { AuthContext } from '@/contexts/AuthContextValue'
 
@@ -12,7 +12,7 @@ function Profile() {
   }
   return (
     <>
-      <Header />
+      <StyledH1>Perfil</StyledH1>
       <CardComponent>
         <StyledButton className='primary' onClick={themeContext.toggleTheme}>
           Trocar para tema{' '}
