@@ -1,8 +1,68 @@
 import { Box, Container, Grid } from '@mui/material'
 import { BannerImage, FormComponent, Logo, StyledH1, StyledP } from '@/components'
 import { pxToRem } from '@/utils'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useFormValidation } from '@/hooks'
+import { AuthContext } from '@/contexts/AuthContextValue'
 
 function Login() {
+  const auth = useContext(AuthContext)
+  const navigate = useNavigate()
+  const [statusMessage, setStatusMessage] = useState<
+    { msg: string; type: 'error' | 'success' } | undefined
+  >(undefined)
+
+  const baseInputs = useMemo(
+    () => [
+      { type: 'email', placeholder: 'Email' },
+      { type: 'password', placeholder: 'Senha' },
+    ],
+    []
+  )
+
+  const { formValues, formValid, handleChange } = useFormValidation(baseInputs)
+
+  const inputs = useMemo(
+    () =>
+      baseInputs.map((input, index) => ({
+        ...input,
+        value: String(formValues[index] ?? ''),
+        onChange: (e: ChangeEvent<HTMLInputElement>) =>
+          handleChange(index, e.target.value),
+      })),
+    [baseInputs, formValues, handleChange]
+  )
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setStatusMessage(undefined)
+
+    try {
+      if (!auth) {
+        setStatusMessage({ msg: 'Auth indisponível', type: 'error' })
+        return
+      }
+
+      await auth.login({
+        email: String(formValues[0] ?? ''),
+        password: String(formValues[1] ?? ''),
+      })
+
+      setStatusMessage({ msg: 'Sucesso!', type: 'success' })
+      navigate('/home')
+    } catch {
+      setStatusMessage({ msg: 'Email ou senha inválidos', type: 'error' })
+    }
+  }
+
+  useEffect(() => {
+    if (auth?.isAuthenticated) {
+      navigate('/home')
+    }
+  }, [auth?.isAuthenticated, navigate])
+
   return (
     <>
       <Box>
@@ -18,17 +78,17 @@ function Login() {
                 <StyledP>Digite sua senha e email para logar</StyledP>
               </Box>
               <FormComponent
-                inputs={[
-                  { type: 'email', placeholder: 'Email' },
-                  { type: 'password', placeholder: 'Senha' },
-                ]}
+                onSubmit={handleSubmit}
+                inputs={inputs}
                 buttons={[
-                  { className: 'primary', type: 'submit', children: 'Login', disabled:true },
+                  {
+                    className: 'primary',
+                    type: 'submit',
+                    children: 'Login',
+                    disabled: !formValid,
+                  },
                 ]}
-                message={{
-                  msg: 'Sucesso!',
-                  type: 'success'
-                }}
+                message={statusMessage}
               />
             </Container>
           </Grid>

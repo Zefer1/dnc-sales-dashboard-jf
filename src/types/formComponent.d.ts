@@ -9,5 +9,6 @@ export type MessageProps = {
 export interface FormComponentProps {
 	inputs: InputProps[]
 	buttons: ButtonProps[]
+	onSubmit?: React.FormEventHandler<HTMLFormElement>
 	message?: MessageProps
 }

@@ -9,8 +9,34 @@ dotenv.config()
 const app = express()
 
 app.use(helmet())
-app.use(cors())
+const frontendUrl = process.env.FRONTEND_URL
+app.use(
+  cors({
+    origin: frontendUrl ? [frontendUrl] : true,
+  })
+)
 app.use(express.json())
+
+function auth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const jwtSecret = process.env.JWT_SECRET
+  if (!jwtSecret) {
+    return res.status(500).json({ error: 'Missing JWT_SECRET' })
+  }
+
+  const authHeader = req.header('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing Bearer token' })
+  }
+
+  const token = authHeader.replace('Bearer ', '').trim()
+  try {
+    const payload = jwt.verify(token, jwtSecret)
+    res.locals.user = payload
+    return next()
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' })
+  }
+}
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ ok: true })
@@ -45,6 +71,10 @@ app.post('/api/login', (req, res) => {
       email,
     },
   })
+})
+
+app.get('/api/profile', auth, (_req, res) => {
+  return res.status(200).json({ user: res.locals.user })
 })
 
 const port = Number(process.env.PORT ?? 3000)

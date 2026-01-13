@@ -26,18 +26,11 @@ npm install express cors helmet bcrypt jsonwebtoken dotenv
 npm install -D typescript ts-node-dev @types/express @types/node @types/cors @types/jsonwebtoken
 ```
 
-Depois:
+Cria o teu `.env` a partir do exemplo:
 
-- Cria `backend/.env.example` (exemplo):
-
-```env
-PORT=3000
-JWT_SECRET=change-me
-DEMO_USER_EMAIL=user@ex.com
-DEMO_USER_PASSWORD=1234
+```bash
+copy .env.example .env
 ```
-
-- Cria `backend/src/server.ts` com um endpoint mínimo de login (`POST /api/login`).
 
 Arranca o backend:
 
@@ -47,9 +40,9 @@ npm run dev
 
 > O backend deve ficar disponível em `http://localhost:3000`.
 
-## 3) Instalar Axios
+## 3) Instalar Axios (frontend)
 
-Na raiz do projeto (onde está o `package.json` do frontend):
+Na raiz do projeto (frontend):
 
 ```bash
 npm install axios
@@ -57,69 +50,30 @@ npm install axios
 
 ## 4) Criar variáveis de ambiente no frontend
 
-Na raiz do frontend, cria o ficheiro `.env.example` com:
+Na raiz do frontend, mantém um ficheiro `.env.example` com:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
-Preenche com o URL base da API (ex.: `http://localhost:3000` ou um domínio remoto).
+Depois cria o teu `.env` local a partir do `.env.example` e ajusta se necessário.
 
-Depois, cria o teu `.env` local (não commitar) a partir do `.env.example` e ajusta se necessário.
+> Nota: o Vite só expõe variáveis com prefixo `VITE_`.
 
-> Nota: o nome recomendado é `VITE_API_BASE_URL` (sem “L” extra) porque o Vite só expõe variáveis com prefixo `VITE_`.
+## 5) Criar o hook `usePost`
 
-## 5) Criar `src/hooks/useAxiots.ts` com o código do hook
+Cria `src/hooks/useAxios.ts` com o hook `usePost` apontando para `VITE_API_BASE_URL`.
 
-Cria a pasta `src/hooks` e dentro cria o ficheiro `useAxiots.ts` com este conteúdo:
+## 6) Validar o formulário e disparar o login
 
-```ts
-import { useState } from 'react'
-import axios, { AxiosRequestConfig } from 'axios'
+- Cria/usa o hook `useFormValidation` para validar email/senha.
+- No `Login.tsx`, no submit do `FormComponent`, chama `auth.login({ email, password })`.
+- Em caso de sucesso, redireciona para `/home`.
 
-const axioInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
-})
+## 7) Rotas protegidas e logout
 
-export const usePost = <T, P>(endpoint: string) => {
-  const [data, setData] = useState<T | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<number | null>(null)
-
-  const postData = async (postData: P, config?: AxiosRequestConfig) => {
-    setData(null)
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await axioInstance({
-        url: endpoint,
-        method: 'POST',
-        data: postData,
-        headers: {
-          'Content-Type': 'application/json',
-          ...config?.headers,
-        },
-        ...config,
-      })
-
-      setData(response.data)
-    } catch (e: any) {
-      setError(e.response.status ?? 500)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return { data, loading, error, postData }
-}
-```
-
-### Como usar (exemplo rápido)
-
-- `usePost<LoginResponse, LoginPayload>('/api/login')`
-- chamar `postData(payload)` no submit do formulário.
-- ler `data`, `loading` e `error` para feedback do utilizador.
+- Proteger `/home`, `/leads`, `/perfil` com `ProtectedRoute`.
+- No `/perfil`, adicionar botão de logout (`auth.logout()`).
 
 ---
 
