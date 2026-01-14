@@ -1,16 +1,9 @@
 import { useCallback, useMemo, useState } from 'react'
-import axios from 'axios'
 import { AuthContext, AuthUser, LoginPayload, LoginResponse } from '@/contexts/AuthContextValue'
+import { api } from '@/api/client'
 
 const TOKEN_STORAGE_KEY = 'auth_token'
 const USER_STORAGE_KEY = 'auth_user'
-
-const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
 
 type AuthProviderProps = {
   children: React.ReactNode

@@ -3,8 +3,8 @@ import { AuthContext } from '@/contexts/AuthContextValue'
 import { useToast } from '@/contexts/ToastContext'
 import { pxToRem } from '@/utils'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip } from '@mui/material'
-import axios from 'axios'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { api } from '@/api/client'
 
 type AuditEvent = {
   id: number
@@ -20,11 +20,6 @@ type AuditEvent = {
 type AuditResponse = {
   events: AuditEvent[]
 }
-
-const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
-  headers: { 'Content-Type': 'application/json' },
-})
 
 function Audit() {
   const auth = useContext(AuthContext)

@@ -2,9 +2,9 @@ import { AvatarsList, CardComponent, CustomChart, CustomTable, StyledH1, StyledP
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { pxToRem } from '@/utils'
 import { Box, Button, CircularProgress, Tooltip } from '@mui/material'
-import axios from 'axios'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '@/api/client'
 
 type Lead = {
   id: number
@@ -26,11 +26,6 @@ type DashboardSummary = {
     data: number[]
   }
 }
-
-const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
-  headers: { 'Content-Type': 'application/json' },
-})
 
 function Home() {
   const auth = useContext(AuthContext)
@@ -63,6 +58,9 @@ function Home() {
   useEffect(() => {
     void loadSummary()
   }, [loadSummary])
+
+  const leadsByMonthLabels = data?.leadsByMonth?.labels ?? []
+  const leadsByMonthData = data?.leadsByMonth?.data ?? []
 
   const avatarsListData = useMemo(() => {
     const recent = data?.recentLeads ?? []
@@ -212,7 +210,7 @@ function Home() {
           Leads por mês
         </StyledP>
         <Box sx={{ marginTop: pxToRem(12) }}>
-          <CustomChart labels={data?.leadsByMonth?.labels ?? []} data={data?.leadsByMonth?.data ?? []} type="bar" />
+          <CustomChart labels={leadsByMonthLabels} data={leadsByMonthData} type="bar" />
         </Box>
       </CardComponent>
     </>

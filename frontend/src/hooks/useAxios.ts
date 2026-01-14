@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import axios, { AxiosRequestConfig } from 'axios'
+import { getApiBaseUrl } from '@/api/client'
 
 const axioInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
+  baseURL: `${getApiBaseUrl()}/`,
 })
 
 export const usePost = <T, P>(endpoint: string) => {

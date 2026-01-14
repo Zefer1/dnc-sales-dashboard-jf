@@ -16,11 +16,11 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material'
-import axios from 'axios'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
+import { api } from '@/api/client'
 
 type Lead = {
   id: number
@@ -39,11 +39,6 @@ type LeadImportResponse = {
   created: number
   skipped: number
 }
-
-const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
-  headers: { 'Content-Type': 'application/json' },
-})
 
 function Leads() {
   const auth = useContext(AuthContext)
