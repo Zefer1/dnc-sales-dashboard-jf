@@ -141,7 +141,13 @@ function sha256Hex(input: string) {
 }
 
 function shouldReturnDevToken() {
-  return process.env.NODE_ENV !== 'production'
+  if (process.env.NODE_ENV === 'production') {
+    return false
+  }
+
+  // Default: enabled in non-production for developer ergonomics.
+  // Set RETURN_DEV_PASSWORD_RESET_TOKEN=false to force "production-like" behavior locally.
+  return process.env.RETURN_DEV_PASSWORD_RESET_TOKEN?.toLowerCase() !== 'false'
 }
 
 function getPasswordResetLink(rawToken: string) {
@@ -274,7 +280,7 @@ app.post('/api/password/forgot', async (req, res) => {
   })
 
   const resetLink = getPasswordResetLink(rawToken)
-  const canEmail = Boolean(resetLink) && canSendEmail()
+  const canEmail = process.env.NODE_ENV !== 'test' && Boolean(resetLink) && canSendEmail()
 
   if (canEmail) {
     try {

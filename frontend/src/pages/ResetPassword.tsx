@@ -22,6 +22,7 @@ function ResetPassword() {
 
   const [manualStep, setManualStep] = useState<Step>('request')
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(undefined)
+  const [requestSent, setRequestSent] = useState(false)
 
   const [requestEmail, setRequestEmail] = useState('')
   const [tokenOverride, setTokenOverride] = useState<string | null>(null)
@@ -85,12 +86,11 @@ function ResetPassword() {
       // API intentionally returns ok=true even when user doesn't exist.
       if (res.data?.devToken) {
         showToast(t('reset.devTokenGenerated'), 'success')
-        navigate(`/redefinir-senha?token=${encodeURIComponent(String(res.data.devToken))}`)
-        return
+        setTokenOverride(String(res.data.devToken))
       }
 
       showToast(t('reset.infoIfExists'), 'success')
-      setManualStep('reset')
+      setRequestSent(true)
     } catch {
       setStatusMessage({ msg: t('reset.errorRequest'), type: 'error' })
     }
@@ -147,6 +147,26 @@ function ResetPassword() {
                   ]}
                   message={statusMessage}
                 />
+
+                {requestSent && (
+                  <Box sx={{ marginTop: pxToRem(16) }}>
+                    <StyledP>{t('reset.infoIfExists')}</StyledP>
+                    <button
+                      type="button"
+                      onClick={() => setManualStep('reset')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        font: 'inherit',
+                      }}
+                    >
+                      {t('reset.haveToken')}
+                    </button>
+                  </Box>
+                )}
 
                 <Box sx={{ marginTop: pxToRem(16) }}>
                   <Link to="/login" style={{ textDecoration: 'underline' }}>

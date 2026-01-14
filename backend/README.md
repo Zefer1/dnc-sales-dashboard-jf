@@ -59,6 +59,9 @@ Variáveis mínimas:
 Para o link do email apontar para o frontend correto, define:
 - `PASSWORD_RESET_BASE_URL` (recomendado) ou `FRONTEND_URL`
 
+Dica (dev): para simular comportamento de produção localmente (não devolver `devToken`), define:
+- `RETURN_DEV_PASSWORD_RESET_TOKEN=false`
+
 Body do login:
 ```json
 { "email": "user@ex.com", "password": "1234" }
