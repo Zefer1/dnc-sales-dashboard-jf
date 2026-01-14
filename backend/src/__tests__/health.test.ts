@@ -54,6 +54,27 @@ describe('auth + leads CRUD', () => {
     const token = loginRes.body?.token as string
     expect(token).toBeTruthy()
 
+    const meRes = await request(app).get('/api/me').set('Authorization', `Bearer ${token}`)
+    expect(meRes.status).toBe(200)
+    expect(meRes.body?.user?.email).toBe(email)
+
+    const updateMeRes = await request(app)
+      .put('/api/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Updated Name' })
+    expect(updateMeRes.status).toBe(200)
+    expect(updateMeRes.body?.user?.name).toBe('Updated Name')
+
+    const changePasswordRes = await request(app)
+      .post('/api/password/change')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: password, newPassword: 'password456' })
+    expect(changePasswordRes.status).toBe(200)
+    expect(changePasswordRes.body?.ok).toBe(true)
+
+    const loginRes2 = await request(app).post('/api/login').send({ email, password: 'password456' })
+    expect(loginRes2.status).toBe(200)
+
     const auditEmptyRes = await request(app).get('/api/audit').set('Authorization', `Bearer ${token}`)
     expect(auditEmptyRes.status).toBe(200)
     expect(Array.isArray(auditEmptyRes.body?.events)).toBe(true)

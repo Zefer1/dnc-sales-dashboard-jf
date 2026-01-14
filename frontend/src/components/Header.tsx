@@ -104,8 +104,8 @@ function Header() {
 										<MenuItem component={Link} to="/audit" onClick={closeMenu}>
 											Auditoria
 										</MenuItem>
-										<MenuItem component={Link} to="/perfil" onClick={closeMenu}>
-											Perfil
+										<MenuItem component={Link} to="/settings" onClick={closeMenu}>
+											Settings
 										</MenuItem>
 										<MenuItem onClick={logoutAndClose}>
 											Sair
@@ -144,7 +144,7 @@ function Header() {
 									<NavItem to="/home">Home</NavItem>
 									<NavItem to="/leads">Leads</NavItem>
 									<NavItem to="/audit">Auditoria</NavItem>
-									<NavItem to="/perfil">Perfil</NavItem>
+									<NavItem to="/settings">Settings</NavItem>
 
 									<Tooltip title="Alternar tema" arrow>
 										<Button
@@ -166,7 +166,7 @@ function Header() {
 										Sair
 									</StyledButton>
 
-									<Link to="/perfil" aria-label="Abrir perfil">
+									<Link to="/settings" aria-label="Abrir settings">
 										<Avatar
 											alt="UrbanCRM Avatar"
 											src="/urbancrm-avatar.svg"

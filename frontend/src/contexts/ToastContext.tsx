@@ -27,6 +27,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
   })
 
   const showToast = useCallback((message: string, severity: ToastSeverity = 'info') => {
+    const enabled = localStorage.getItem('settings_toasts_enabled')
+    if (enabled === 'false') return
     setState({ open: true, message, severity })
   }, [])
 

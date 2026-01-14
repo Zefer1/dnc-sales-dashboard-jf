@@ -33,6 +33,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null)
   }, [])
 
+  const refreshMe = useCallback(async () => {
+    const currentToken = token
+    if (!currentToken) return
+
+    type MeResponse = { user: AuthUser }
+    const response = await api.get<MeResponse>('/api/me', {
+      headers: { Authorization: `Bearer ${currentToken}` },
+    })
+
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.data.user))
+    setUser(response.data.user)
+  }, [token])
+
   const login = useCallback(async (payload: LoginPayload) => {
     const response = await api.post<LoginResponse>('/api/login', payload)
 
@@ -60,9 +73,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isAuthenticated: Boolean(token),
       login,
       register,
+      refreshMe,
       logout,
     }),
-    [token, user, login, register, logout]
+    [token, user, login, register, refreshMe, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

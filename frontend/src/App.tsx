@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import { Landing, Login, Registration, ResetPassword, Home, Leads, Profile, Audit } from './pages'
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom'
+import { Landing, Login, Registration, ResetPassword, Home, Leads, Settings, Audit } from './pages'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { AppLayout } from '@/layouts/AppLayout'
 
@@ -30,10 +30,19 @@ function App() {
             }
           />
           <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/perfil"
             element={
               <ProtectedRoute>
-                <Profile />
+                <Navigate to="/settings" replace />
               </ProtectedRoute>
             }
           />

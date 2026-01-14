@@ -74,6 +74,15 @@ const resetPasswordSchema = z.object({
   newPassword: z.string().min(8),
 })
 
+const updateMeSchema = z.object({
+  name: z.string().min(1).max(80),
+})
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+})
+
 const leadCreateSchema = z.object({
   name: z.string().min(1),
   contact: z.string().min(1).optional(),
@@ -328,6 +337,100 @@ app.post('/api/password/reset', async (req, res) => {
 
 app.get('/api/profile', auth, (_req, res) => {
   return res.status(200).json({ user: res.locals.user })
+})
+
+app.get('/api/me', auth, async (_req, res) => {
+  const userId = res.locals.userId as number
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, name: true },
+  })
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' })
+  }
+
+  return res.status(200).json({
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name ?? 'User',
+    },
+  })
+})
+
+app.put('/api/me', auth, async (req, res) => {
+  const userId = res.locals.userId as number
+  const parsed = updateMeSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
+  }
+
+  const before = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, name: true },
+  })
+  if (!before) {
+    return res.status(404).json({ error: 'User not found' })
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { name: parsed.data.name.trim() },
+    select: { id: true, email: true, name: true },
+  })
+
+  await logAuditEvent({
+    userId,
+    action: 'USER_UPDATE',
+    entityType: 'User',
+    entityId: userId,
+    before,
+    after: updated,
+    metadata: { changed: ['name'] },
+  })
+
+  return res.status(200).json({
+    user: {
+      id: updated.id,
+      email: updated.email,
+      name: updated.name ?? 'User',
+    },
+  })
+})
+
+app.post('/api/password/change', auth, async (req, res) => {
+  const userId = res.locals.userId as number
+  const parsed = changePasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, passwordHash: true },
+  })
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' })
+  }
+
+  const ok = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash)
+  if (!ok) {
+    return res.status(401).json({ error: 'Credenciais inválidas' })
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10)
+  await prisma.user.update({ where: { id: userId }, data: { passwordHash } })
+
+  await logAuditEvent({
+    userId,
+    action: 'PASSWORD_CHANGE',
+    entityType: 'User',
+    entityId: userId,
+  })
+
+  return res.status(200).json({ ok: true })
 })
 
 app.get('/api/leads', auth, async (_req, res) => {
