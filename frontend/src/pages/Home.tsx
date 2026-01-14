@@ -5,6 +5,7 @@ import { Box, Button, CircularProgress, Tooltip } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/api/client'
+import { useTranslation } from 'react-i18next'
 
 type Lead = {
   id: number
@@ -30,6 +31,7 @@ type DashboardSummary = {
 function Home() {
   const auth = useContext(AuthContext)
   const navigate = useNavigate()
+  const { t } = useTranslation('home')
 
   const displayName = auth?.user?.name?.trim()
 
@@ -51,11 +53,11 @@ function Home() {
       const response = await api.get<DashboardSummary>('/api/dashboard/summary', { headers: authHeaders })
       setData(response.data)
     } catch {
-      setError('Falha ao carregar dados do dashboard')
+      setError(t('errors.load'))
     } finally {
       setLoading(false)
     }
-  }, [auth?.token, authHeaders])
+  }, [auth?.token, authHeaders, t])
 
   useEffect(() => {
     void loadSummary()
@@ -70,14 +72,17 @@ function Home() {
       return [
         {
           avatar: '/urbancrm-avatar.svg',
-          name: 'Nenhuma lead ainda',
-          subtitle: 'Crie sua primeira lead para ver dados aqui',
+          name: t('empty.noLead'),
+          subtitle: t('empty.noLeadDesc'),
         },
       ]
     }
 
     return recent.map((lead) => {
-      const parts = [lead.source ? `Origem: ${lead.source}` : 'Sem origem', lead.contact ? `Contato: ${lead.contact}` : null]
+      const parts = [
+        lead.source ? t('labels.source', { source: lead.source }) : t('labels.noSource'),
+        lead.contact ? t('labels.contact', { contact: lead.contact }) : null,
+      ]
         .filter(Boolean)
         .join(' • ')
 
@@ -89,7 +94,10 @@ function Home() {
     })
   }, [data?.recentLeads])
 
-  const tableHeaders = ['Nome', 'Contato', 'Origem', 'Ações']
+  const translatedTableHeaders = useMemo(
+    () => [t('table.name'), t('table.contact'), t('table.source'), t('table.actions')],
+    [t]
+  )
   const tableRows = useMemo(() => {
     const recent = data?.recentLeads ?? []
     if (!recent.length) {
@@ -102,7 +110,7 @@ function Home() {
         <span key={`contact-${lead.id}`}>{lead.contact ?? '-'}</span>,
         <span key={`source-${lead.id}`}>{lead.source ?? '-'}</span>,
         <Box key={`actions-${lead.id}`} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Tooltip title="Editar no Leads" arrow>
+          <Tooltip title={t('table.edit')} arrow>
             <span>
               <Button
                 variant="text"
@@ -110,11 +118,11 @@ function Home() {
                 onClick={() => navigate(`/leads?edit=${lead.id}`)}
                 aria-label={`Editar lead ${lead.name}`}
               >
-                Editar
+                {t('actions.edit')}
               </Button>
             </span>
           </Tooltip>
-          <Tooltip title="Ver lista de leads" arrow>
+          <Tooltip title={t('table.view')} arrow>
             <span>
               <Button
                 variant="text"
@@ -122,43 +130,43 @@ function Home() {
                 onClick={() => navigate(`/leads?q=${encodeURIComponent(lead.name)}`)}
                 aria-label={`Ver lead ${lead.name} no Leads`}
               >
-                Ver
+                {t('actions.view')}
               </Button>
             </span>
           </Tooltip>
         </Box>,
       ]
     })
-  }, [data?.recentLeads, navigate])
+  }, [data?.recentLeads, navigate, t])
 
 
   return (
     <>
-      <StyledH1>Home</StyledH1>
+      <StyledH1>{t('title')}</StyledH1>
 
       <Box sx={{ marginTop: pxToRem(4), marginBottom: pxToRem(16) }}>
-        <StyledP color="#666">{displayName ? `Bem-vindo, ${displayName}!` : 'Bem-vindo!'}</StyledP>
+        <StyledP color="#666">{displayName ? t('greeting', { name: displayName }) : t('greetingDefault')}</StyledP>
       </Box>
 
       <CardComponent>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
           <Box>
             <StyledP $weight={700} size={18} $lineheight={24}>
-              Visão geral
+              {t('overview.title')}
             </StyledP>
             <StyledP color="#666">
-              Leads do seu usuário
+              {t('overview.subtitle')}
             </StyledP>
           </Box>
           <Box sx={{ display: 'inline-flex', gap: pxToRem(8), flexWrap: 'wrap' }}>
-            <Button variant="contained" onClick={() => navigate('/leads?focus=new')} aria-label="Adicionar lead">
-              Adicionar lead
+            <Button variant="contained" onClick={() => navigate('/leads?focus=new')} aria-label={t('buttons.addLead')}>
+              {t('buttons.addLead')}
             </Button>
-            <Button variant="outlined" onClick={() => navigate('/leads')} aria-label="Ir para Leads">
-              Ver leads
+            <Button variant="outlined" onClick={() => navigate('/leads')} aria-label={t('buttons.viewLeads')}>
+              {t('buttons.viewLeads')}
             </Button>
-            <Button variant="text" onClick={() => void loadSummary()} disabled={loading} aria-label="Atualizar dashboard">
-              Atualizar
+            <Button variant="text" onClick={() => void loadSummary()} disabled={loading} aria-label={t('buttons.refresh')}>
+              {t('buttons.refresh')}
             </Button>
           </Box>
         </Box>
@@ -174,7 +182,7 @@ function Home() {
             <Box sx={{ display: 'flex', gap: pxToRem(16), flexWrap: 'wrap' }}>
               <Box sx={{ minWidth: pxToRem(220) }}>
                 <StyledP $weight={600} size={14} $lineheight={20} color="#666">
-                  Total de leads
+                  {t('overview.total')}
                 </StyledP>
                 <StyledP $weight={700} size={24} $lineheight={32}>
                   {data?.stats ? data.stats.totalLeads : 0}
@@ -182,7 +190,7 @@ function Home() {
               </Box>
               <Box sx={{ minWidth: pxToRem(220) }}>
                 <StyledP $weight={600} size={14} $lineheight={20} color="#666">
-                  Leads neste mês
+                  {t('overview.thisMonth')}
                 </StyledP>
                 <StyledP $weight={700} size={24} $lineheight={32}>
                   {data?.stats ? data.stats.leadsThisMonth : 0}
@@ -195,7 +203,7 @@ function Home() {
 
       <CardComponent>
         <StyledP $weight={600} size={16} $lineheight={24}>
-          Recentes
+          {t('sections.recent')}
         </StyledP>
         <Box sx={{ marginTop: pxToRem(8) }}>
           <AvatarsList listData={avatarsListData} />
@@ -204,16 +212,16 @@ function Home() {
 
       <CardComponent>
         <StyledP $weight={600} size={16} $lineheight={24}>
-          Últimas leads
+          {t('sections.latest')}
         </StyledP>
         <Box sx={{ marginTop: pxToRem(12) }}>
-          <CustomTable headers={tableHeaders} rows={tableRows} />
+          <CustomTable headers={translatedTableHeaders} rows={tableRows} />
         </Box>
       </CardComponent>
 
       <CardComponent>
         <StyledP $weight={600} size={16} $lineheight={24}>
-          Leads por mês
+          {t('sections.byMonth')}
         </StyledP>
         <Box sx={{ marginTop: pxToRem(12) }}>
           <CustomChart labels={leadsByMonthLabels} data={leadsByMonthData} type="bar" />

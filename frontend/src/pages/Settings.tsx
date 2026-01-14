@@ -4,6 +4,7 @@ import { AppThemeContext } from '@/contexts/AppThemeContext'
 import { useToast } from '@/contexts/ToastContext'
 import { api } from '@/api/client'
 import { pxToRem } from '@/utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 import {
   Box,
   Button,
@@ -17,6 +18,7 @@ import {
 } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 type LocalPreferences = {
   language: 'pt-PT' | 'pt-BR' | 'en-US'
@@ -81,6 +83,9 @@ function Settings() {
   const auth = useContext(AuthContext)
   const theme = useContext(AppThemeContext)
   const toast = useToast()
+  const { language, setLanguage } = useLanguage()
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
 
   const authHeaders = useMemo(() => {
     const token = auth?.token
@@ -88,6 +93,10 @@ function Settings() {
   }, [auth?.token])
 
   const [prefs, setPrefs] = useState<LocalPreferences>(() => loadPrefs())
+
+  useEffect(() => {
+    setPrefs((p) => (p.language === language ? p : { ...p, language }))
+  }, [language])
 
   useEffect(() => {
     if (!auth?.token) return
@@ -110,7 +119,7 @@ function Settings() {
     if (!auth?.token) return
     const trimmed = name.trim()
     if (!trimmed) {
-      toast.showToast('Nome é obrigatório', 'error')
+      toast.showToast(t('account.nameRequired'), 'error')
       return
     }
 
@@ -118,13 +127,13 @@ function Settings() {
     try {
       await api.put('/api/me', { name: trimmed }, { headers: authHeaders })
       await auth.refreshMe()
-      toast.showToast('Perfil atualizado', 'success')
+      toast.showToast(t('account.profileOk'), 'success')
     } catch {
-      toast.showToast('Falha ao atualizar perfil', 'error')
+      toast.showToast(t('account.profileFail'), 'error')
     } finally {
       setSavingProfile(false)
     }
-  }, [auth, authHeaders, name, toast])
+  }, [auth, authHeaders, name, toast, t])
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -134,11 +143,11 @@ function Settings() {
   const changePassword = useCallback(async () => {
     if (!auth?.token) return
     if (newPassword !== confirmPassword) {
-      toast.showToast('As passwords não coincidem', 'error')
+      toast.showToast(t('security.mismatch'), 'error')
       return
     }
     if (newPassword.length < 8) {
-      toast.showToast('A nova password deve ter pelo menos 8 caracteres', 'error')
+      toast.showToast(t('security.short'), 'error')
       return
     }
 
@@ -152,57 +161,57 @@ function Settings() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      toast.showToast('Password alterada', 'success')
+      toast.showToast(t('security.ok'), 'success')
     } catch {
-      toast.showToast('Falha ao alterar password', 'error')
+      toast.showToast(t('security.fail'), 'error')
     } finally {
       setChangingPassword(false)
     }
-  }, [auth?.token, authHeaders, currentPassword, newPassword, confirmPassword, toast])
+  }, [auth?.token, authHeaders, currentPassword, newPassword, confirmPassword, toast, t])
 
   const clearLocal = useCallback(() => {
     const keepTheme = localStorage.getItem('theme')
     localStorage.clear()
     if (keepTheme) localStorage.setItem('theme', keepTheme)
     savePrefs(loadPrefs())
-    toast.showToast('Preferências locais limpas', 'success')
-  }, [toast])
+    toast.showToast(t('privacy.cleared'), 'success')
+  }, [toast, t])
 
   return (
     <>
-      <StyledH1>Settings</StyledH1>
+      <StyledH1>{t('title')}</StyledH1>
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Conta
+          {t('sections.account')}
         </StyledP>
 
         <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(12) }}>
           <Box>
             <StyledP $weight={600} size={14} $lineheight={20} color="#666">
-              Email
+              {t('account.email')}
             </StyledP>
-            <StyledInput value={email} disabled aria-label="Email" />
+            <StyledInput value={email} disabled aria-label={t('account.email')} />
           </Box>
 
           <Box>
             <StyledP $weight={600} size={14} $lineheight={20} color="#666">
-              Nome
+              {t('account.name')}
             </StyledP>
             <StyledInput
               value={name}
               onChange={(e) => setName(e.target.value)}
-              aria-label="Nome"
-              placeholder="Seu nome"
+              aria-label={t('account.name')}
+              placeholder={t('account.namePlaceholder')}
             />
           </Box>
 
           <Box sx={{ display: 'flex', gap: pxToRem(12), flexWrap: 'wrap' }}>
             <Button variant="contained" onClick={() => void saveProfile()} disabled={savingProfile || !auth?.token}>
-              {savingProfile ? 'Salvando…' : 'Salvar'}
+              {savingProfile ? t('account.saving') : t('account.save')}
             </Button>
             <Button variant="outlined" component={Link} to="/redefinir-senha">
-              Esqueceu-se da password?
+              {t('account.forgot')}
             </Button>
           </Box>
         </Box>
@@ -210,30 +219,30 @@ function Settings() {
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Segurança
+          {t('sections.security')}
         </StyledP>
 
         <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(12) }}>
           <StyledInput
             type="password"
-            placeholder="Password atual"
+            placeholder={t('security.current')}
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            aria-label="Password atual"
+            aria-label={t('security.current')}
           />
           <StyledInput
             type="password"
-            placeholder="Nova password (mín. 8)"
+            placeholder={t('security.new')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            aria-label="Nova password"
+            aria-label={t('security.new')}
           />
           <StyledInput
             type="password"
-            placeholder="Confirmar nova password"
+            placeholder={t('security.confirm')}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            aria-label="Confirmar nova password"
+            aria-label={t('security.confirm')}
           />
 
           <Box sx={{ display: 'flex', gap: pxToRem(12), flexWrap: 'wrap' }}>
@@ -242,10 +251,10 @@ function Settings() {
               onClick={() => void changePassword()}
               disabled={changingPassword || !auth?.token}
             >
-              {changingPassword ? 'Alterando…' : 'Alterar password'}
+              {changingPassword ? t('security.changing') : t('security.change')}
             </Button>
             <Button variant="text" color="error" onClick={() => auth?.logout()}>
-              Sair da conta
+              {t('security.logout')}
             </Button>
           </Box>
         </Box>
@@ -253,19 +262,19 @@ function Settings() {
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Aparência
+          {t('sections.appearance')}
         </StyledP>
 
         <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(12) }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12) }}>
             <Box>
               <StyledP $weight={600} size={14} $lineheight={20}>
-                Tema
+                {t('appearance.theme')}
               </StyledP>
-              <StyledP color="#666">{theme?.appTheme === 'dark' ? 'Escuro' : 'Claro'}</StyledP>
+              <StyledP color="#666">{theme?.appTheme === 'dark' ? tCommon('theme.dark') : tCommon('theme.light')}</StyledP>
             </Box>
             <Button variant="outlined" onClick={() => theme?.toggleTheme()}>
-              Alternar
+              {t('appearance.toggle')}
             </Button>
           </Box>
 
@@ -283,40 +292,44 @@ function Settings() {
                 }
               />
             }
-            label="Tabelas compactas"
+            label={t('appearance.compact')}
           />
 
           <FormControlLabel
             control={<Switch checked={prefs.reduceMotion} onChange={(e) => setPrefs((p) => ({ ...p, reduceMotion: e.target.checked }))} />}
-            label="Reduzir animações"
+            label={t('appearance.reduceMotion')}
           />
 
           <FormControlLabel
             control={<Switch checked={prefs.highContrast} onChange={(e) => setPrefs((p) => ({ ...p, highContrast: e.target.checked }))} />}
-            label="Alto contraste (local)"
+            label={t('appearance.highContrast')}
           />
         </Box>
       </CardComponent>
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Idioma e Formatos
+          {t('sections.language')}
         </StyledP>
 
         <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(12) }}>
           <Box>
             <StyledP $weight={600} size={14} $lineheight={20} color="#666">
-              Idioma
+              {t('language.label')}
             </StyledP>
             <FormControl fullWidth>
               <Select
-                value={prefs.language}
-                onChange={(e) => setPrefs((p) => ({ ...p, language: e.target.value as LocalPreferences['language'] }))}
+                value={language}
+                onChange={(e) => {
+                  const lang = e.target.value as LocalPreferences['language']
+                  setLanguage(lang)
+                  setPrefs((p) => ({ ...p, language: lang }))
+                }}
                 size="small"
               >
-                <MenuItem value="pt-PT">Português (Portugal)</MenuItem>
-                <MenuItem value="pt-BR">Português (Brasil)</MenuItem>
-                <MenuItem value="en-US">English (US)</MenuItem>
+                <MenuItem value="pt-PT">{t('language.ptPT')}</MenuItem>
+                <MenuItem value="pt-BR">{t('language.ptBR')}</MenuItem>
+                <MenuItem value="en-US">{t('language.enUS')}</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -325,25 +338,25 @@ function Settings() {
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Notificações
+          {t('sections.notifications')}
         </StyledP>
 
         <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(12) }}>
           <FormControlLabel
             control={<Switch checked={prefs.toasts} onChange={(e) => setPrefs((p) => ({ ...p, toasts: e.target.checked }))} />}
-            label="Toasts (mensagens no fundo)"
+            label={t('notifications.toasts')}
           />
 
           <FormControlLabel
             control={<Switch checked={prefs.tooltips} onChange={(e) => setPrefs((p) => ({ ...p, tooltips: e.target.checked }))} />}
-            label="Tooltips (dicas ao passar o mouse)"
+            label={t('notifications.tooltips')}
           />
 
-          <Tooltip title="Este toggle ainda não altera comportamento no app" arrow>
+          <Tooltip title={t('notifications.autoRefreshHint')} arrow>
             <Box>
               <FormControlLabel
                 control={<Switch checked={prefs.dashboardAutoRefresh} onChange={(e) => setPrefs((p) => ({ ...p, dashboardAutoRefresh: e.target.checked }))} />}
-                label="Dashboard: auto-atualizar"
+                label={t('notifications.autoRefresh')}
               />
             </Box>
           </Tooltip>
@@ -352,27 +365,31 @@ function Settings() {
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Privacidade
+          {t('sections.privacy')}
         </StyledP>
 
         <Box sx={{ display: 'flex', gap: pxToRem(12), flexWrap: 'wrap', marginTop: pxToRem(12) }}>
           <Button variant="outlined" onClick={clearLocal}>
-            Limpar dados locais
+            {t('privacy.clearLocal')}
           </Button>
           <Button variant="text" color="error" onClick={() => auth?.logout()}>
-            Logout
+            {t('privacy.logout')}
           </Button>
         </Box>
       </CardComponent>
 
       <CardComponent>
         <StyledP $weight={700} size={16} $lineheight={24}>
-          Developer
+          {t('sections.developer')}
         </StyledP>
 
         <Box sx={{ display: 'grid', gap: pxToRem(8), marginTop: pxToRem(12) }}>
-          <StyledP color="#666">API base: {api.defaults.baseURL}</StyledP>
-          <StyledP color="#666">User ID: {auth?.user?.id ?? '-'} </StyledP>
+          <StyledP color="#666">
+            {t('developer.apiBase')}: {api.defaults.baseURL}
+          </StyledP>
+          <StyledP color="#666">
+            {t('developer.userId')}: {auth?.user?.id ?? '-'}
+          </StyledP>
         </Box>
       </CardComponent>
     </>

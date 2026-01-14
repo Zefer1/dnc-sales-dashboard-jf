@@ -1,7 +1,7 @@
 import { CardComponent, CustomTable, StyledH1, StyledP, StyledInput } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { useToast } from '@/contexts/ToastContext'
-import { pxToRem } from '@/utils'
+import { formatDateTime, pxToRem } from '@/utils'
 import {
   Box,
   Button,
@@ -21,6 +21,7 @@ import { useSearchParams } from 'react-router-dom'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { api } from '@/api/client'
+import { useTranslation } from 'react-i18next'
 
 type Lead = {
   id: number
@@ -43,6 +44,7 @@ type LeadImportResponse = {
 function Leads() {
   const auth = useContext(AuthContext)
   const toast = useToast()
+  const { t } = useTranslation('leads')
   const [searchParams] = useSearchParams()
 
   const createNameRef = useRef<HTMLInputElement | null>(null)
@@ -85,11 +87,11 @@ function Leads() {
       const response = await api.get<LeadsResponse>('/api/leads', { headers: authHeaders })
       setLeads(response.data.leads)
     } catch {
-      toast.showToast('Falha ao carregar leads', 'error')
+      toast.showToast(t('messages.loadFail'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [auth?.token, authHeaders, toast])
+  }, [auth?.token, authHeaders, toast, t])
 
   useEffect(() => {
     void loadLeads()
@@ -133,7 +135,7 @@ function Leads() {
 
     const trimmedName = name.trim()
     if (!trimmedName) {
-      toast.showToast('Nome é obrigatório', 'error')
+      toast.showToast(t('messages.nameRequired'), 'error')
       return
     }
 
@@ -153,9 +155,9 @@ function Leads() {
       setName('')
       setContact('')
       setSource('')
-      toast.showToast('Lead criada com sucesso', 'success')
+      toast.showToast(t('messages.createOk'), 'success')
     } catch {
-      toast.showToast('Falha ao criar lead', 'error')
+      toast.showToast(t('messages.createFail'), 'error')
     } finally {
       setCreating(false)
     }
@@ -170,9 +172,9 @@ function Leads() {
         data: { id },
       })
       setLeads((prev) => prev.filter((l) => l.id !== id))
-      toast.showToast('Lead removida', 'success')
+      toast.showToast(t('messages.deleteOk'), 'success')
     } catch {
-      toast.showToast('Falha ao remover lead', 'error')
+      toast.showToast(t('messages.deleteFail'), 'error')
     } finally {
       setDeletingId(null)
     }
@@ -200,7 +202,7 @@ function Leads() {
 
     const trimmedName = editName.trim()
     if (!trimmedName) {
-      toast.showToast('Nome é obrigatório', 'error')
+      toast.showToast(t('messages.nameRequired'), 'error')
       return
     }
 
@@ -219,10 +221,10 @@ function Leads() {
 
       const updated = response.data.lead
       setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)))
-      toast.showToast('Lead atualizada', 'success')
+      toast.showToast(t('messages.updateOk'), 'success')
       closeEdit()
     } catch {
-      toast.showToast('Falha ao atualizar lead', 'error')
+      toast.showToast(t('messages.updateFail'), 'error')
     } finally {
       setUpdatingId(null)
     }
@@ -242,7 +244,7 @@ function Leads() {
 
   const exportCsv = async () => {
     if (!leads.length) {
-      toast.showToast('Sem leads para exportar', 'info')
+      toast.showToast(t('messages.noLeadsToExport'), 'info')
       return
     }
 
@@ -261,12 +263,12 @@ function Leads() {
     a.download = `leads-${date}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.showToast('CSV exportado', 'success')
+    toast.showToast(t('messages.csvExported'), 'success')
   }
 
   const exportExcel = async () => {
     if (!leads.length) {
-      toast.showToast('Sem leads para exportar', 'info')
+      toast.showToast(t('messages.noLeadsToExport'), 'info')
       return
     }
 
@@ -282,7 +284,7 @@ function Leads() {
     XLSX.utils.book_append_sheet(wb, sheet, 'Leads')
     const date = new Date().toISOString().slice(0, 10)
     XLSX.writeFile(wb, `leads-${date}.xlsx`)
-    toast.showToast('Excel exportado', 'success')
+    toast.showToast(t('messages.excelExported'), 'success')
   }
 
   const parseImportedRows = (rows: Array<Record<string, unknown>>) => {
@@ -321,7 +323,7 @@ function Leads() {
   const importLeads = async () => {
     if (!auth?.token) return
     if (!importFile) {
-      toast.showToast('Selecione um arquivo CSV ou XLSX', 'error')
+      toast.showToast(t('messages.selectFile'), 'error')
       return
     }
 
@@ -333,7 +335,7 @@ function Leads() {
         const text = await importFile.text()
         const result = Papa.parse<Record<string, unknown>>(text, { header: true, skipEmptyLines: true })
         if (result.errors?.length) {
-          throw new Error(result.errors[0]?.message ?? 'Falha ao ler CSV')
+          throw new Error(result.errors[0]?.message ?? t('messages.readCsvFail'))
         }
         parsedLeads = parseImportedRows(result.data)
       } else if (importFile.name.toLowerCase().endsWith('.xlsx')) {
@@ -344,12 +346,12 @@ function Leads() {
         const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
         parsedLeads = parseImportedRows(rows)
       } else {
-        toast.showToast('Formato não suportado. Use .csv ou .xlsx', 'error')
+        toast.showToast(t('messages.unsupportedFormat'), 'error')
         return
       }
 
       if (!parsedLeads.length) {
-        toast.showToast('Nenhuma lead válida encontrada no arquivo', 'error')
+        toast.showToast(t('messages.noValid'), 'error')
         return
       }
 
@@ -360,13 +362,13 @@ function Leads() {
       )
 
       toast.showToast(
-        `Importação concluída: ${response.data.created} criada(s), ${response.data.skipped} ignorada(s)`,
+        t('messages.importOk', { created: response.data.created, skipped: response.data.skipped }),
         'success'
       )
       closeImport()
       await loadLeads()
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Falha ao importar leads'
+      const message = e instanceof Error ? e.message : t('messages.importFail')
       toast.showToast(message, 'error')
     } finally {
       setImporting(false)
@@ -387,10 +389,7 @@ function Leads() {
 
   const rows = useMemo(() => {
     return filteredLeads.map((lead) => {
-      const createdAt = new Date(lead.createdAt)
-      const createdAtLabel = Number.isNaN(createdAt.getTime())
-        ? lead.createdAt
-        : createdAt.toLocaleString()
+      const createdAtLabel = formatDateTime(lead.createdAt)
 
       return [
         lead.name,
@@ -398,20 +397,20 @@ function Leads() {
         lead.source ?? '-',
         createdAtLabel,
         <Box key={lead.id} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Tooltip title="Editar lead" arrow>
+          <Tooltip title={t('tooltips.edit')} arrow>
             <span>
               <Button
                 variant="text"
                 size="small"
                 disabled={deletingId === lead.id || updatingId === lead.id}
                 onClick={() => openEdit(lead)}
-                aria-label={`Editar lead ${lead.name}`}
+                aria-label={`${t('tooltips.edit')} ${lead.name}`}
               >
-                Editar
+                {t('buttons.edit')}
               </Button>
             </span>
           </Tooltip>
-          <Tooltip title="Excluir lead" arrow>
+          <Tooltip title={t('tooltips.delete')} arrow>
             <span>
               <Button
                 variant="text"
@@ -419,191 +418,195 @@ function Leads() {
                 size="small"
                 disabled={deletingId === lead.id || updatingId === lead.id}
                 onClick={() => void handleDelete(lead.id)}
-                aria-label={`Excluir lead ${lead.name}`}
+                aria-label={`${t('tooltips.delete')} ${lead.name}`}
               >
-                {deletingId === lead.id ? 'Excluindo…' : 'Excluir'}
+                {deletingId === lead.id ? t('buttons.deleting') : t('buttons.delete')}
               </Button>
             </span>
           </Tooltip>
         </Box>,
       ]
     })
-  }, [filteredLeads, deletingId, updatingId])
+  }, [filteredLeads, deletingId, updatingId, t])
+
+  const tableHeaders = useMemo(
+    () => [t('headers.name'), t('headers.contact'), t('headers.source'), t('headers.createdAt'), t('headers.actions')],
+    [t]
+  )
 
   return (
     <>
-    <Box>
-      <StyledH1>Leads</StyledH1>
-      <StyledP color="#666">Crie, liste e remova leads (persistidos no banco).</StyledP>
-    </Box>
-
-    <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm">
-      <DialogTitle>Editar Lead</DialogTitle>
-      <DialogContent>
-        <Box
-          sx={{
-            display: 'grid',
-            gap: pxToRem(12),
-            marginTop: pxToRem(8),
-          }}
-        >
-          <StyledInput
-            placeholder="Nome"
-            value={editName}
-            aria-label="Nome"
-            onChange={(e) => setEditName(e.target.value)}
-          />
-          <StyledInput
-            placeholder="Contato (opcional)"
-            value={editContact}
-            aria-label="Contato"
-            onChange={(e) => setEditContact(e.target.value)}
-          />
-          <StyledInput
-            placeholder="Origem (opcional)"
-            value={editSource}
-            aria-label="Origem"
-            onChange={(e) => setEditSource(e.target.value)}
-          />
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={closeEdit} disabled={!!updatingId}>
-          Cancelar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => void handleUpdate()}
-          disabled={!auth?.token || !editingLead || updatingId === editingLead.id}
-        >
-          {updatingId && editingLead && updatingId === editingLead.id ? 'Salvando…' : 'Salvar'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-
-    <CardComponent ref={createCardRef}>
-      <StyledP $weight={600} size={16} $lineheight={24}>
-        Nova Lead
-      </StyledP>
-      <Box component="form" onSubmit={handleCreate} sx={{ marginTop: pxToRem(12) }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr auto' },
-            gap: pxToRem(12),
-            alignItems: 'center',
-          }}
-        >
-          <StyledInput
-            ref={createNameRef}
-            placeholder="Nome"
-            value={name}
-            aria-label="Nome"
-            onChange={(e) => setName(e.target.value)}
-          />
-          <StyledInput
-            placeholder="Contato (opcional)"
-            value={contact}
-            aria-label="Contato"
-            onChange={(e) => setContact(e.target.value)}
-          />
-          <StyledInput
-            placeholder="Origem (opcional)"
-            value={source}
-            aria-label="Origem"
-            onChange={(e) => setSource(e.target.value)}
-          />
-          <Button variant="contained" type="submit" disabled={creating || !auth?.token}>
-            {creating ? 'Criando…' : 'Adicionar'}
-          </Button>
-        </Box>
+      <Box>
+        <StyledH1>{t('title')}</StyledH1>
+        <StyledP color="#666">{t('subtitle')}</StyledP>
       </Box>
 
-    </CardComponent>
-
-    <Dialog open={importOpen} onClose={closeImport} fullWidth maxWidth="sm">
-      <DialogTitle>Importar leads</DialogTitle>
-      <DialogContent>
-        <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(8) }}>
-          <Box>
-            <input
-              type="file"
-              accept=".csv,.xlsx"
-              onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
-              aria-label="Selecionar arquivo para importar"
-              disabled={importing}
+      <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm">
+        <DialogTitle>{t('dialogs.editTitle')}</DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: pxToRem(12),
+              marginTop: pxToRem(8),
+            }}
+          >
+            <StyledInput
+              placeholder={t('placeholders.name')}
+              value={editName}
+              aria-label={t('placeholders.name')}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+            <StyledInput
+              placeholder={t('placeholders.contact')}
+              value={editContact}
+              aria-label={t('placeholders.contact')}
+              onChange={(e) => setEditContact(e.target.value)}
+            />
+            <StyledInput
+              placeholder={t('placeholders.source')}
+              value={editSource}
+              aria-label={t('placeholders.source')}
+              onChange={(e) => setEditSource(e.target.value)}
             />
           </Box>
-
-          <FormControl>
-            <StyledP $weight={600} size={14} $lineheight={20}>
-              Modo
-            </StyledP>
-            <RadioGroup
-              value={importMode}
-              onChange={(e) => setImportMode(e.target.value as typeof importMode)}
-              aria-label="Modo de importação"
-            >
-              <FormControlLabel
-                value="skip_exact_duplicates"
-                control={<Radio />}
-                label="Ignorar duplicados exatos (nome + contato + origem)"
-              />
-              <FormControlLabel value="always_create" control={<Radio />} label="Sempre criar" />
-            </RadioGroup>
-          </FormControl>
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={closeImport} disabled={importing}>
-          Cancelar
-        </Button>
-        <Button variant="contained" onClick={() => void importLeads()} disabled={importing || !importFile}>
-          {importing ? 'Importando…' : 'Importar'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-
-    <CardComponent>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: pxToRem(12),
-          flexWrap: 'wrap',
-        }}
-      >
-        <StyledP $weight={600} size={16} $lineheight={24}>
-          Lista
-        </StyledP>
-        <Box sx={{ display: 'inline-flex', gap: pxToRem(8), flexWrap: 'wrap' }}>
-          <Tooltip title="Exportar CSV" arrow>
-            <span>
-              <Button variant="outlined" onClick={() => void exportCsv()} disabled={loading || !auth?.token}>
-                Exportar CSV
-              </Button>
-            </span>
-          </Tooltip>
-          <Tooltip title="Exportar Excel" arrow>
-            <span>
-              <Button variant="outlined" onClick={() => void exportExcel()} disabled={loading || !auth?.token}>
-                Exportar Excel
-              </Button>
-            </span>
-          </Tooltip>
-          <Tooltip title="Importar CSV/XLSX" arrow>
-            <span>
-              <Button variant="outlined" onClick={openImport} disabled={loading || !auth?.token}>
-                Importar
-              </Button>
-            </span>
-          </Tooltip>
-          <Button variant="text" onClick={() => void loadLeads()} disabled={loading || !auth?.token}>
-            Atualizar
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeEdit} disabled={!!updatingId}>
+            {t('buttons.cancel')}
           </Button>
+          <Button
+            variant="contained"
+            onClick={() => void handleUpdate()}
+            disabled={!auth?.token || !editingLead || updatingId === editingLead.id}
+          >
+            {updatingId && editingLead && updatingId === editingLead.id ? t('buttons.saving') : t('buttons.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <CardComponent ref={createCardRef}>
+        <StyledP $weight={600} size={16} $lineheight={24}>
+          {t('newLead')}
+        </StyledP>
+        <Box component="form" onSubmit={handleCreate} sx={{ marginTop: pxToRem(12) }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr auto' },
+              gap: pxToRem(12),
+              alignItems: 'center',
+            }}
+          >
+            <StyledInput
+              ref={createNameRef}
+              placeholder={t('placeholders.name')}
+              value={name}
+              aria-label={t('placeholders.name')}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <StyledInput
+              placeholder={t('placeholders.contact')}
+              value={contact}
+              aria-label={t('placeholders.contact')}
+              onChange={(e) => setContact(e.target.value)}
+            />
+            <StyledInput
+              placeholder={t('placeholders.source')}
+              value={source}
+              aria-label={t('placeholders.source')}
+              onChange={(e) => setSource(e.target.value)}
+            />
+            <Button variant="contained" type="submit" disabled={creating || !auth?.token}>
+              {creating ? t('buttons.creating') : t('buttons.add')}
+            </Button>
+          </Box>
         </Box>
-      </Box>
+      </CardComponent>
+
+      <Dialog open={importOpen} onClose={closeImport} fullWidth maxWidth="sm">
+        <DialogTitle>{t('dialogs.importTitle')}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(8) }}>
+            <Box>
+              <input
+                type="file"
+                accept=".csv,.xlsx"
+                onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+                aria-label={t('dialogs.importTitle')}
+                disabled={importing}
+              />
+            </Box>
+
+            <FormControl>
+              <StyledP $weight={600} size={14} $lineheight={20}>
+                {t('dialogs.mode')}
+              </StyledP>
+              <RadioGroup
+                value={importMode}
+                onChange={(e) => setImportMode(e.target.value as typeof importMode)}
+                aria-label={t('dialogs.mode')}
+              >
+                <FormControlLabel
+                  value="skip_exact_duplicates"
+                  control={<Radio />}
+                  label={t('dialogs.skipDup')}
+                />
+                <FormControlLabel value="always_create" control={<Radio />} label={t('dialogs.alwaysCreate')} />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeImport} disabled={importing}>
+            {t('buttons.cancel')}
+          </Button>
+          <Button variant="contained" onClick={() => void importLeads()} disabled={importing || !importFile}>
+            {importing ? t('buttons.importing') : t('buttons.import')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <CardComponent>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: pxToRem(12),
+            flexWrap: 'wrap',
+          }}
+        >
+          <StyledP $weight={600} size={16} $lineheight={24}>
+            {t('title')}
+          </StyledP>
+          <Box sx={{ display: 'inline-flex', gap: pxToRem(8), flexWrap: 'wrap' }}>
+            <Tooltip title={t('tooltips.exportCsv')} arrow>
+              <span>
+                <Button variant="outlined" onClick={() => void exportCsv()} disabled={loading || !auth?.token}>
+                  {t('buttons.exportCsv')}
+                </Button>
+              </span>
+            </Tooltip>
+            <Tooltip title={t('tooltips.exportExcel')} arrow>
+              <span>
+                <Button variant="outlined" onClick={() => void exportExcel()} disabled={loading || !auth?.token}>
+                  {t('buttons.exportExcel')}
+                </Button>
+              </span>
+            </Tooltip>
+            <Tooltip title={t('tooltips.import')} arrow>
+              <span>
+                <Button variant="outlined" onClick={openImport} disabled={loading || !auth?.token}>
+                  {t('buttons.import')}
+                </Button>
+              </span>
+            </Tooltip>
+            <Button variant="text" onClick={() => void loadLeads()} disabled={loading || !auth?.token}>
+              {t('buttons.refresh')}
+            </Button>
+          </Box>
+        </Box>
 
       <Box
         sx={{
@@ -616,21 +619,21 @@ function Leads() {
       >
         <Box sx={{ flex: 1, minWidth: pxToRem(240) }}>
           <StyledInput
-            placeholder="Buscar (nome, contato, origem)"
+            placeholder={t('placeholders.search')}
             value={search}
-            aria-label="Buscar leads"
+            aria-label={t('placeholders.search')}
             onChange={(e) => setSearch(e.target.value)}
           />
         </Box>
-        <Tooltip title="Limpar busca" arrow>
+        <Tooltip title={t('buttons.clearSearch')} arrow>
           <span>
             <Button variant="text" onClick={() => setSearch('')} disabled={!search.trim()}>
-              Limpar
+              {t('buttons.clearSearch')}
             </Button>
           </span>
         </Tooltip>
         <Box sx={{ color: '#666', fontSize: pxToRem(14) }}>
-          {filteredLeads.length} / {leads.length}
+          {t('counts.filtered', { filtered: filteredLeads.length, total: leads.length })}
         </Box>
       </Box>
 
@@ -640,10 +643,10 @@ function Leads() {
             <CircularProgress size={24} />
           </Box>
         ) : (
-          <CustomTable headers={['Nome', 'Contato', 'Origem', 'Criado em', 'Ações']} rows={rows} />
+          <CustomTable headers={tableHeaders} rows={rows} />
         )}
       </Box>
-    </CardComponent>
+      </CardComponent>
     </>
   )
 }

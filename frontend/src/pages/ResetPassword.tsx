@@ -4,15 +4,9 @@ import { pxToRem } from '@/utils'
 import { useMemo, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import axios from 'axios'
+import { api } from '@/api/client'
 import { useToast } from '@/contexts/ToastContext'
-
-const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+import { useTranslation } from 'react-i18next'
 
 type StatusMessage = { msg: string; type: 'error' | 'success' } | undefined
 
@@ -21,6 +15,7 @@ type Step = 'request' | 'reset'
 function ResetPassword() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { t } = useTranslation('auth')
   const [searchParams] = useSearchParams()
 
   const tokenFromQuery = searchParams.get('token')
@@ -40,12 +35,12 @@ function ResetPassword() {
     () => [
       {
         type: 'email',
-        placeholder: 'Email',
+        placeholder: t('reset.email'),
         value: requestEmail,
         onChange: (e: ChangeEvent<HTMLInputElement>) => setRequestEmail(e.target.value),
       },
     ],
-    [requestEmail]
+    [requestEmail, t]
   )
 
   const requestValid = useMemo(() => /^\S+@\S+\.\S+$/.test(requestEmail), [requestEmail])
@@ -54,24 +49,24 @@ function ResetPassword() {
     () => [
       {
         type: 'text',
-        placeholder: 'Token',
+        placeholder: t('reset.token'),
         value: token,
         onChange: (e: ChangeEvent<HTMLInputElement>) => setTokenOverride(e.target.value),
       },
       {
         type: 'password',
-        placeholder: 'Nova password',
+        placeholder: t('reset.newPassword'),
         value: newPassword,
         onChange: (e: ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value),
       },
       {
         type: 'password',
-        placeholder: 'Confirmar password',
+        placeholder: t('reset.confirmPassword'),
         value: confirmPassword,
         onChange: (e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value),
       },
     ],
-    [token, newPassword, confirmPassword]
+    [token, newPassword, confirmPassword, t]
   )
 
   const resetValid = useMemo(() => {
@@ -89,15 +84,15 @@ function ResetPassword() {
 
       // API intentionally returns ok=true even when user doesn't exist.
       if (res.data?.devToken) {
-        showToast('Token gerado (modo dev). Pode redefinir já.', 'success')
+        showToast(t('reset.devTokenGenerated'), 'success')
         navigate(`/redefinir-senha?token=${encodeURIComponent(String(res.data.devToken))}`)
         return
       }
 
-      showToast('Se o email existir, enviámos instruções de redefinição.', 'success')
+      showToast(t('reset.infoIfExists'), 'success')
       setManualStep('reset')
     } catch {
-      setStatusMessage({ msg: 'Não foi possível iniciar a redefinição', type: 'error' })
+      setStatusMessage({ msg: t('reset.errorRequest'), type: 'error' })
     }
   }
 
@@ -106,16 +101,16 @@ function ResetPassword() {
     setStatusMessage(undefined)
 
     if (newPassword !== confirmPassword) {
-      setStatusMessage({ msg: 'As passwords não coincidem', type: 'error' })
+      setStatusMessage({ msg: t('reset.errorMismatch'), type: 'error' })
       return
     }
 
     try {
       await api.post('/api/password/reset', { token, newPassword })
-      showToast('Password alterada com sucesso. Faça login.', 'success')
+      showToast(t('reset.successChanged'), 'success')
       navigate('/login')
     } catch {
-      setStatusMessage({ msg: 'Token inválido/expirado ou password inválida', type: 'error' })
+      setStatusMessage({ msg: t('reset.errorInvalid'), type: 'error' })
     }
   }
 
@@ -129,11 +124,11 @@ function ResetPassword() {
             </Box>
 
             <Box sx={{ marginBottom: pxToRem(24) }}>
-              <StyledH1>Redefinir password</StyledH1>
+              <StyledH1>{t('reset.title')}</StyledH1>
               <StyledP>
                 {step === 'request'
-                  ? 'Indique o seu email para receber o link de redefinição.'
-                  : 'Insira o token e escolha uma nova password.'}
+                  ? t('reset.requestSubtitle')
+                  : t('reset.resetSubtitle')}
               </StyledP>
             </Box>
 
@@ -146,7 +141,7 @@ function ResetPassword() {
                     {
                       className: 'primary',
                       type: 'submit',
-                      children: 'Enviar',
+                      children: t('reset.submitRequest'),
                       disabled: !requestValid,
                     },
                   ]}
@@ -155,7 +150,7 @@ function ResetPassword() {
 
                 <Box sx={{ marginTop: pxToRem(16) }}>
                   <Link to="/login" style={{ textDecoration: 'underline' }}>
-                    Voltar ao login
+                    {t('reset.backToLogin')}
                   </Link>
                 </Box>
               </>
@@ -168,7 +163,7 @@ function ResetPassword() {
                     {
                       className: 'primary',
                       type: 'submit',
-                      children: 'Alterar password',
+                      children: t('reset.submitReset'),
                       disabled: !resetValid,
                     },
                   ]}
@@ -186,7 +181,7 @@ function ResetPassword() {
                   }}
                 >
                   <Link to="/login" style={{ textDecoration: 'underline' }}>
-                    Voltar ao login
+                    {t('reset.backToLogin')}
                   </Link>
                   <button
                     type="button"
@@ -205,7 +200,7 @@ function ResetPassword() {
                       font: 'inherit',
                     }}
                   >
-                    Reenviar token
+                    {t('reset.resend')}
                   </button>
                 </Box>
               </>

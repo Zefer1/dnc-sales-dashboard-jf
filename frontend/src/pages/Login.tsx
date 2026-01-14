@@ -6,20 +6,22 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useFormValidation } from '@/hooks'
 import { AuthContext } from '@/contexts/AuthContextValue'
+import { useTranslation } from 'react-i18next'
 
 function Login() {
   const auth = useContext(AuthContext)
   const navigate = useNavigate()
+  const { t } = useTranslation('auth')
   const [statusMessage, setStatusMessage] = useState<
     { msg: string; type: 'error' | 'success' } | undefined
   >(undefined)
 
   const baseInputs = useMemo(
     () => [
-      { type: 'email', placeholder: 'Email' },
-      { type: 'password', placeholder: 'Senha' },
+      { type: 'email', placeholder: t('login.email') },
+      { type: 'password', placeholder: t('login.password') },
     ],
-    []
+    [t]
   )
 
   const { formValues, formValid, handleChange } = useFormValidation(baseInputs)
@@ -41,7 +43,7 @@ function Login() {
 
     try {
       if (!auth) {
-        setStatusMessage({ msg: 'Auth indisponível', type: 'error' })
+        setStatusMessage({ msg: t('login.errorUnavailable'), type: 'error' })
         return
       }
 
@@ -50,10 +52,10 @@ function Login() {
         password: String(formValues[1] ?? ''),
       })
 
-      setStatusMessage({ msg: 'Sucesso!', type: 'success' })
+      setStatusMessage({ msg: t('login.success'), type: 'success' })
       navigate('/home')
     } catch {
-      setStatusMessage({ msg: 'Email ou senha inválidos', type: 'error' })
+      setStatusMessage({ msg: t('login.errorInvalid'), type: 'error' })
     }
   }
 
@@ -74,8 +76,8 @@ function Login() {
             <Container maxWidth="sm">
               <Box sx={{ marginBottom: pxToRem(24) }}><Logo height={41} width={100} /></Box>
               <Box sx={{ marginBottom: pxToRem(24) }}>
-                <StyledH1>Bem-vindo</StyledH1>
-                <StyledP>Digite sua senha e email para logar</StyledP>
+                <StyledH1>{t('login.title')}</StyledH1>
+                <StyledP>{t('login.subtitle')}</StyledP>
               </Box>
               <FormComponent
                 onSubmit={handleSubmit}
@@ -84,7 +86,7 @@ function Login() {
                   {
                     className: 'primary',
                     type: 'submit',
-                    children: 'Login',
+                    children: t('login.submit'),
                     disabled: !formValid,
                   },
                 ]}
@@ -102,10 +104,10 @@ function Login() {
                 }}
               >
                 <Link to="/cadastro" style={{ textDecoration: 'underline' }}>
-                  Ainda não tem conta? Registe-se aqui.
+                  {t('login.noAccount')}
                 </Link>
                 <Link to="/redefinir-senha" style={{ textDecoration: 'underline' }}>
-                  Esqueceu-se da sua password? Mude aqui.
+                  {t('login.forgot')}
                 </Link>
               </Box>
             </Container>

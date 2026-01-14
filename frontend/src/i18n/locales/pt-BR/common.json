@@ -1,0 +1,37 @@
+{
+  "nav": {
+    "home": "Home",
+    "leads": "Leads",
+    "audit": "Auditoria",
+    "settings": "Configurações",
+    "logout": "Sair",
+    "login": "Login",
+    "register": "Criar conta",
+    "menu": "Menu",
+    "start": "Início"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Escuro",
+    "toggle": "Alternar tema"
+  },
+  "buttons": {
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "refresh": "Atualizar",
+    "add": "Adicionar",
+    "view": "Ver",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "import": "Importar",
+    "exportCsv": "Exportar CSV",
+    "exportExcel": "Exportar Excel",
+    "clear": "Limpar"
+  },
+  "states": {
+    "loading": "Carregando…",
+    "error": "Ocorreu um erro"
+  }
+}

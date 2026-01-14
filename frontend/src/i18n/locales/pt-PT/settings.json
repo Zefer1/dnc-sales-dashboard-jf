@@ -1,0 +1,63 @@
+{
+  "title": "Definições",
+  "sections": {
+    "account": "Conta",
+    "security": "Segurança",
+    "appearance": "Aparência",
+    "language": "Idioma e formatos",
+    "notifications": "Notificações",
+    "privacy": "Privacidade",
+    "developer": "Developer"
+  },
+  "account": {
+    "email": "Email",
+    "name": "Nome",
+    "namePlaceholder": "O seu nome",
+    "save": "Guardar",
+    "saving": "A guardar…",
+    "forgot": "Esqueceu-se da password?",
+    "nameRequired": "Nome é obrigatório",
+    "profileOk": "Perfil atualizado",
+    "profileFail": "Falha ao atualizar perfil"
+  },
+  "security": {
+    "current": "Password atual",
+    "new": "Nova password (mín. 8)",
+    "confirm": "Confirmar nova password",
+    "change": "Alterar password",
+    "changing": "A alterar…",
+    "logout": "Sair da conta",
+    "mismatch": "As passwords não coincidem",
+    "short": "A nova password deve ter pelo menos 8 caracteres",
+    "ok": "Password alterada",
+    "fail": "Falha ao alterar password"
+  },
+  "appearance": {
+    "theme": "Tema",
+    "toggle": "Alternar",
+    "compact": "Tabelas compactas",
+    "reduceMotion": "Reduzir animações",
+    "highContrast": "Alto contraste (local)"
+  },
+  "language": {
+    "label": "Idioma",
+    "ptPT": "Português (Portugal)",
+    "ptBR": "Português (Brasil)",
+    "enUS": "English (US)"
+  },
+  "notifications": {
+    "toasts": "Toasts (mensagens no fundo)",
+    "tooltips": "Tooltips (dicas ao passar o rato)",
+    "autoRefresh": "Dashboard: auto-atualizar",
+    "autoRefreshHint": "Este toggle ainda não altera comportamento no app"
+  },
+  "privacy": {
+    "clearLocal": "Limpar dados locais",
+    "cleared": "Preferências locais limpas",
+    "logout": "Logout"
+  },
+  "developer": {
+    "apiBase": "API base",
+    "userId": "User ID"
+  }
+}

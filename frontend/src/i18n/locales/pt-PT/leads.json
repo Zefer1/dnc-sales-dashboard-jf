@@ -1,0 +1,70 @@
+{
+  "title": "Leads",
+  "subtitle": "Crie, liste e remova leads (persistidas no banco).",
+  "newLead": "Nova lead",
+  "placeholders": {
+    "name": "Nome",
+    "contact": "Contacto (opcional)",
+    "source": "Origem (opcional)",
+    "search": "Buscar (nome, contacto, origem)"
+  },
+  "headers": {
+    "name": "Nome",
+    "contact": "Contacto",
+    "source": "Origem",
+    "createdAt": "Criado em",
+    "actions": "Ações"
+  },
+  "buttons": {
+    "add": "Adicionar",
+    "creating": "A criar…",
+    "refresh": "Atualizar",
+    "clearSearch": "Limpar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleting": "A eliminar…",
+    "import": "Importar",
+    "importing": "A importar…",
+    "exportCsv": "Exportar CSV",
+    "exportExcel": "Exportar Excel",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "A guardar…"
+  },
+  "tooltips": {
+    "exportCsv": "Exportar CSV",
+    "exportExcel": "Exportar Excel",
+    "import": "Importar CSV/XLSX",
+    "edit": "Editar lead",
+    "delete": "Eliminar lead"
+  },
+  "dialogs": {
+    "editTitle": "Editar lead",
+    "importTitle": "Importar leads",
+    "mode": "Modo",
+    "skipDup": "Ignorar duplicados exatos (nome + contacto + origem)",
+    "alwaysCreate": "Criar sempre"
+  },
+  "messages": {
+    "nameRequired": "Nome é obrigatório",
+    "loadFail": "Falha ao carregar leads",
+    "createOk": "Lead criada com sucesso",
+    "createFail": "Falha ao criar lead",
+    "updateOk": "Lead atualizada",
+    "updateFail": "Falha ao atualizar lead",
+    "deleteOk": "Lead removida",
+    "deleteFail": "Falha ao remover lead",
+    "noLeadsToExport": "Sem leads para exportar",
+    "csvExported": "CSV exportado",
+    "excelExported": "Excel exportado",
+    "selectFile": "Selecione um arquivo CSV ou XLSX",
+    "unsupportedFormat": "Formato não suportado. Use .csv ou .xlsx",
+    "readCsvFail": "Falha ao ler CSV",
+    "noValid": "Nenhuma lead válida encontrada no arquivo",
+    "importOk": "Importação concluída: {{created}} criada(s), {{skipped}} ignorada(s)",
+    "importFail": "Falha ao importar leads"
+  },
+  "counts": {
+    "filtered": "{{filtered}} / {{total}}"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "title": "Auditoria",
+  "subtitle": "Histórico de ações (criação/edição/exclusão/importação).",
+  "eventsTitle": "Eventos",
+  "tooltips": {
+    "viewDetails": "Ver detalhes"
+  },
+  "buttons": {
+    "refresh": "Atualizar",
+    "details": "Detalhes",
+    "close": "Fechar"
+  },
+  "headers": {
+    "when": "Quando",
+    "action": "Ação",
+    "entity": "Entidade",
+    "actions": "Ações"
+  },
+  "dialog": {
+    "title": "Detalhes",
+    "eventLabel": "Evento"
+  },
+  "messages": {
+    "loadFail": "Falha ao carregar auditoria"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "title": "Home",
+  "greeting": "Welcome, {{name}}!",
+  "greetingDefault": "Welcome!",
+  "overview": {
+    "title": "Overview",
+    "subtitle": "Your leads",
+    "total": "Total leads",
+    "thisMonth": "Leads this month"
+  },
+  "buttons": {
+    "addLead": "Add lead",
+    "viewLeads": "View leads",
+    "refresh": "Refresh"
+  },
+  "actions": {
+    "edit": "Edit",
+    "view": "View"
+  },
+  "sections": {
+    "recent": "Recent",
+    "latest": "Latest leads",
+    "byMonth": "Leads by month"
+  },
+  "empty": {
+    "noLead": "No leads yet",
+    "noLeadDesc": "Create your first lead to see data here"
+  },
+  "table": {
+    "name": "Name",
+    "contact": "Contact",
+    "source": "Source",
+    "actions": "Actions",
+    "edit": "Edit in Leads",
+    "view": "View in Leads"
+  },
+  "labels": {
+    "source": "Source: {{source}}",
+    "contact": "Contact: {{contact}}",
+    "noSource": "No source",
+    "noContact": "No contact"
+  },
+  "errors": {
+    "load": "Failed to load dashboard data"
+  }
+}
