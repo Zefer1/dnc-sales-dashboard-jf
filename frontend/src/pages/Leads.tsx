@@ -1,4 +1,4 @@
-import { CardComponent, CustomTable, StyledH1, StyledP, StyledInput } from '@/components'
+import { AppTooltip, CardComponent, CustomTable, StyledH1, StyledP, StyledInput } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { useToast } from '@/contexts/ToastContext'
 import { formatDateTime, pxToRem } from '@/utils'
@@ -10,7 +10,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Tooltip,
   FormControl,
   FormControlLabel,
   Radio,
@@ -397,7 +396,7 @@ function Leads() {
         lead.source ?? '-',
         createdAtLabel,
         <Box key={lead.id} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Tooltip title={t('tooltips.edit')} arrow>
+          <AppTooltip title={t('tooltips.edit')} arrow>
             <span>
               <Button
                 variant="text"
@@ -409,8 +408,8 @@ function Leads() {
                 {t('buttons.edit')}
               </Button>
             </span>
-          </Tooltip>
-          <Tooltip title={t('tooltips.delete')} arrow>
+          </AppTooltip>
+          <AppTooltip title={t('tooltips.delete')} arrow>
             <span>
               <Button
                 variant="text"
@@ -423,7 +422,7 @@ function Leads() {
                 {deletingId === lead.id ? t('buttons.deleting') : t('buttons.delete')}
               </Button>
             </span>
-          </Tooltip>
+          </AppTooltip>
         </Box>,
       ]
     })
@@ -581,27 +580,27 @@ function Leads() {
             {t('title')}
           </StyledP>
           <Box sx={{ display: 'inline-flex', gap: pxToRem(8), flexWrap: 'wrap' }}>
-            <Tooltip title={t('tooltips.exportCsv')} arrow>
+            <AppTooltip title={t('tooltips.exportCsv')} arrow>
               <span>
                 <Button variant="outlined" onClick={() => void exportCsv()} disabled={loading || !auth?.token}>
                   {t('buttons.exportCsv')}
                 </Button>
               </span>
-            </Tooltip>
-            <Tooltip title={t('tooltips.exportExcel')} arrow>
+            </AppTooltip>
+            <AppTooltip title={t('tooltips.exportExcel')} arrow>
               <span>
                 <Button variant="outlined" onClick={() => void exportExcel()} disabled={loading || !auth?.token}>
                   {t('buttons.exportExcel')}
                 </Button>
               </span>
-            </Tooltip>
-            <Tooltip title={t('tooltips.import')} arrow>
+            </AppTooltip>
+            <AppTooltip title={t('tooltips.import')} arrow>
               <span>
                 <Button variant="outlined" onClick={openImport} disabled={loading || !auth?.token}>
                   {t('buttons.import')}
                 </Button>
               </span>
-            </Tooltip>
+            </AppTooltip>
             <Button variant="text" onClick={() => void loadLeads()} disabled={loading || !auth?.token}>
               {t('buttons.refresh')}
             </Button>
@@ -625,13 +624,13 @@ function Leads() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </Box>
-        <Tooltip title={t('buttons.clearSearch')} arrow>
+        <AppTooltip title={t('buttons.clearSearch')} arrow>
           <span>
             <Button variant="text" onClick={() => setSearch('')} disabled={!search.trim()}>
               {t('buttons.clearSearch')}
             </Button>
           </span>
-        </Tooltip>
+        </AppTooltip>
         <Box sx={{ color: '#666', fontSize: pxToRem(14) }}>
           {t('counts.filtered', { filtered: filteredLeads.length, total: leads.length })}
         </Box>

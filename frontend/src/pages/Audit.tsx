@@ -1,8 +1,9 @@
 import { CardComponent, CustomTable, StyledH1, StyledP } from '@/components'
+import { AppTooltip } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { useToast } from '@/contexts/ToastContext'
 import { formatDateTime, pxToRem } from '@/utils'
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip } from '@mui/material'
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '@/api/client'
 import { useTranslation } from 'react-i18next'
@@ -75,7 +76,7 @@ function Audit() {
         <span key={`action-${e.id}`}>{e.action}</span>,
         <span key={`entity-${e.id}`}>{entity}</span>,
         <Box key={`actions-${e.id}`} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Tooltip title={t('tooltips.viewDetails')} arrow>
+          <AppTooltip title={t('tooltips.viewDetails')} arrow>
             <span>
               <Button
                 variant="text"
@@ -86,7 +87,7 @@ function Audit() {
                 {t('buttons.details')}
               </Button>
             </span>
-          </Tooltip>
+          </AppTooltip>
         </Box>,
       ]
     })
