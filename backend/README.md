@@ -38,6 +38,27 @@ npm test
 - `PUT /api/leads/update` (Bearer)
 - `DELETE /api/leads/delete` (Bearer)
 
+### Password reset
+
+- `POST /api/password/forgot` — pede email de recuperação
+- `POST /api/password/reset` — redefine a password via token
+
+Para receberes mesmo o email (em vez de `devToken`), configura SMTP no `.env`.
+
+#### Gmail SMTP
+
+O Gmail requer 2FA + "App Password" (não funciona com a password normal).
+
+Variáveis mínimas:
+- `SMTP_HOST=smtp.gmail.com`
+- `SMTP_PORT=587`
+- `SMTP_USER=your.email@gmail.com`
+- `SMTP_PASS=<app-password>`
+- `SMTP_FROM` é opcional (se não estiver definido, usa `SMTP_USER`)
+
+Para o link do email apontar para o frontend correto, define:
+- `PASSWORD_RESET_BASE_URL` (recomendado) ou `FRONTEND_URL`
+
 Body do login:
 ```json
 { "email": "user@ex.com", "password": "1234" }
