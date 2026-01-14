@@ -45,6 +45,15 @@ npm test
 
 Para receberes mesmo o email (em vez de `devToken`), configura SMTP no `.env`.
 
+#### CAPTCHA (produção)
+
+O endpoint `POST /api/password/forgot` exige CAPTCHA em produção para prevenir abuso.
+Usamos Cloudflare Turnstile.
+
+Variáveis:
+- `TURNSTILE_SECRET_KEY`
+- No frontend: `VITE_TURNSTILE_SITE_KEY`
+
 #### Gmail SMTP
 
 O Gmail requer 2FA + "App Password" (não funciona com a password normal).
