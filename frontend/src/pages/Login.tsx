@@ -3,7 +3,7 @@ import { BannerImage, FormComponent, Logo, StyledH1, StyledP } from '@/component
 import { pxToRem } from '@/utils'
 import { useContext, useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useFormValidation } from '@/hooks'
 import { AuthContext } from '@/contexts/AuthContextValue'
 
@@ -90,6 +90,24 @@ function Login() {
                 ]}
                 message={statusMessage}
               />
+
+              <Box
+                sx={{
+                  marginTop: pxToRem(16),
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: pxToRem(12),
+                }}
+              >
+                <Link to="/cadastro" style={{ textDecoration: 'underline' }}>
+                  Ainda não tem conta? Registe-se aqui.
+                </Link>
+                <Link to="/redefinir-senha" style={{ textDecoration: 'underline' }}>
+                  Esqueceu-se da sua password? Mude aqui.
+                </Link>
+              </Box>
             </Container>
           </Grid>
           <Grid size={{ xs: false, sm: 6 }} sx={{ display: { xs: 'none', sm: 'block' } }}>

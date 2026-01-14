@@ -4,8 +4,10 @@ import helmet from 'helmet'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+import crypto from 'node:crypto'
 import { z } from 'zod'
 import { PrismaClient } from '@prisma/client'
+import { canSendEmail, sendEmail } from './email/mailer'
 
 dotenv.config()
 
@@ -63,6 +65,15 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+})
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(20),
+  newPassword: z.string().min(8),
+})
+
 const leadCreateSchema = z.object({
   name: z.string().min(1),
   contact: z.string().min(1).optional(),
@@ -114,6 +125,23 @@ async function logAuditEvent(params: {
       metadata: params.metadata ?? undefined,
     },
   })
+}
+
+function sha256Hex(input: string) {
+  return crypto.createHash('sha256').update(input).digest('hex')
+}
+
+function shouldReturnDevToken() {
+  return process.env.NODE_ENV !== 'production'
+}
+
+function getPasswordResetLink(rawToken: string) {
+  const base = process.env.PASSWORD_RESET_BASE_URL ?? process.env.FRONTEND_URL
+  if (!base) {
+    return null
+  }
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base
+  return `${normalizedBase}/redefinir-senha?token=${encodeURIComponent(rawToken)}`
 }
 
 app.post('/api/register', async (req, res) => {
@@ -186,6 +214,116 @@ app.post('/api/login', async (req, res) => {
       email: user.email,
     },
   })
+})
+
+app.post('/api/password/forgot', async (req, res) => {
+  const parsed = forgotPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
+  }
+
+  const { email } = parsed.data
+  const user = await prisma.user.findUnique({ where: { email } })
+
+  // Always return 200 to avoid email enumeration.
+  if (!user) {
+    return res.status(200).json({ ok: true })
+  }
+
+  const rawToken = crypto.randomBytes(32).toString('hex')
+  const tokenHash = sha256Hex(rawToken)
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000)
+
+  await prisma.$executeRaw`
+    INSERT INTO "PasswordResetToken" ("tokenHash", "expiresAt", "userId")
+    VALUES (${tokenHash}, ${expiresAt}, ${user.id})
+  `
+
+  await logAuditEvent({
+    userId: user.id,
+    action: 'PASSWORD_RESET_REQUEST',
+    entityType: 'User',
+    entityId: user.id,
+    metadata: { email },
+  })
+
+  if (shouldReturnDevToken()) {
+    return res.status(200).json({ ok: true, devToken: rawToken })
+  }
+
+  const resetLink = getPasswordResetLink(rawToken)
+  if (resetLink && canSendEmail()) {
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'UrbanCRM — Redefinição de password',
+        text:
+          `Recebemos um pedido para redefinir a sua password.\n\n` +
+          `Abra este link para continuar: ${resetLink}\n\n` +
+          `Se não foi você, ignore este email.`,
+        html:
+          `<p>Recebemos um pedido para redefinir a sua password.</p>` +
+          `<p><a href="${resetLink}">Clique aqui para redefinir</a></p>` +
+          `<p>Se não foi você, ignore este email.</p>`,
+      })
+    } catch {
+      // Keep response generic (no email enumeration). User can retry.
+      await prisma.$executeRaw`
+        DELETE FROM "PasswordResetToken"
+        WHERE "tokenHash" = ${tokenHash}
+      `
+    }
+  }
+
+  return res.status(200).json({ ok: true })
+})
+
+app.post('/api/password/reset', async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
+  }
+
+  const { token, newPassword } = parsed.data
+  const tokenHash = sha256Hex(token)
+
+  type ResetRow = { id: number; userId: number }
+  const rows = await prisma.$queryRaw<ResetRow[]>`
+    SELECT "id", "userId"
+    FROM "PasswordResetToken"
+    WHERE "tokenHash" = ${tokenHash}
+      AND "usedAt" IS NULL
+      AND "expiresAt" > ${new Date()}
+    LIMIT 1
+  `
+  const record = rows[0]
+
+  if (!record) {
+    return res.status(400).json({ error: 'Token inválido ou expirado' })
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10)
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: record.userId },
+      data: { passwordHash },
+    }),
+    prisma.$executeRaw`
+      UPDATE "PasswordResetToken"
+      SET "usedAt" = ${new Date()}
+      WHERE "id" = ${record.id}
+    `,
+  ])
+
+  await logAuditEvent({
+    userId: record.userId,
+    action: 'PASSWORD_RESET',
+    entityType: 'User',
+    entityId: record.userId,
+  })
+
+  return res.status(200).json({ ok: true })
 })
 
 app.get('/api/profile', auth, (_req, res) => {

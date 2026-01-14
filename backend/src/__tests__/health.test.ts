@@ -126,3 +126,29 @@ describe('auth + leads CRUD', () => {
     expect(leads2.some((l) => l.id === createdId)).toBe(false)
   })
 })
+
+describe('password reset', () => {
+  it('forgot -> reset -> login with new password', async () => {
+    const email = `reset-${Date.now()}@example.com`
+    const password = 'password123'
+    const newPassword = 'newpassword123'
+
+    const registerRes = await request(app).post('/api/register').send({ email, password })
+    expect(registerRes.status).toBe(201)
+
+    const forgotRes = await request(app).post('/api/password/forgot').send({ email })
+    expect(forgotRes.status).toBe(200)
+    expect(forgotRes.body?.ok).toBe(true)
+    expect(typeof forgotRes.body?.devToken).toBe('string')
+
+    const resetRes = await request(app)
+      .post('/api/password/reset')
+      .send({ token: forgotRes.body.devToken, newPassword })
+    expect(resetRes.status).toBe(200)
+    expect(resetRes.body?.ok).toBe(true)
+
+    const loginRes = await request(app).post('/api/login').send({ email, password: newPassword })
+    expect(loginRes.status).toBe(200)
+    expect(loginRes.body?.token).toBeTruthy()
+  })
+})

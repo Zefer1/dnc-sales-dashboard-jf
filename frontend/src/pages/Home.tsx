@@ -139,7 +139,7 @@ function Home() {
       <CardComponent>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
           <Box>
-            <StyledP weight={700} size={18} lineheight={24}>
+            <StyledP $weight={700} size={18} $lineheight={24}>
               Visão geral
             </StyledP>
             <StyledP color="#666">
@@ -169,19 +169,19 @@ function Home() {
           ) : (
             <Box sx={{ display: 'flex', gap: pxToRem(16), flexWrap: 'wrap' }}>
               <Box sx={{ minWidth: pxToRem(220) }}>
-                <StyledP weight={600} size={14} lineheight={20} color="#666">
+                <StyledP $weight={600} size={14} $lineheight={20} color="#666">
                   Total de leads
                 </StyledP>
-                <StyledP weight={700} size={24} lineheight={32}>
-                  {data?.stats.totalLeads ?? 0}
+                <StyledP $weight={700} size={24} $lineheight={32}>
+                  {data?.stats ? data.stats.totalLeads : 0}
                 </StyledP>
               </Box>
               <Box sx={{ minWidth: pxToRem(220) }}>
-                <StyledP weight={600} size={14} lineheight={20} color="#666">
+                <StyledP $weight={600} size={14} $lineheight={20} color="#666">
                   Leads neste mês
                 </StyledP>
-                <StyledP weight={700} size={24} lineheight={32}>
-                  {data?.stats.leadsThisMonth ?? 0}
+                <StyledP $weight={700} size={24} $lineheight={32}>
+                  {data?.stats ? data.stats.leadsThisMonth : 0}
                 </StyledP>
               </Box>
             </Box>
@@ -190,7 +190,7 @@ function Home() {
       </CardComponent>
 
       <CardComponent>
-        <StyledP weight={600} size={16} lineheight={24}>
+        <StyledP $weight={600} size={16} $lineheight={24}>
           Recentes
         </StyledP>
         <Box sx={{ marginTop: pxToRem(8) }}>
@@ -199,7 +199,7 @@ function Home() {
       </CardComponent>
 
       <CardComponent>
-        <StyledP weight={600} size={16} lineheight={24}>
+        <StyledP $weight={600} size={16} $lineheight={24}>
           Últimas leads
         </StyledP>
         <Box sx={{ marginTop: pxToRem(12) }}>
@@ -208,11 +208,11 @@ function Home() {
       </CardComponent>
 
       <CardComponent>
-        <StyledP weight={600} size={16} lineheight={24}>
+        <StyledP $weight={600} size={16} $lineheight={24}>
           Leads por mês
         </StyledP>
         <Box sx={{ marginTop: pxToRem(12) }}>
-          <CustomChart labels={data?.leadsByMonth.labels ?? []} data={data?.leadsByMonth.data ?? []} type="bar" />
+          <CustomChart labels={data?.leadsByMonth?.labels ?? []} data={data?.leadsByMonth?.data ?? []} type="bar" />
         </Box>
       </CardComponent>
     </>

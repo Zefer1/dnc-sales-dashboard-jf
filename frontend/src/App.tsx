@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import { Landing, Login, Registration, Home, Leads, Profile, Audit } from './pages'
+import { Landing, Login, Registration, ResetPassword, Home, Leads, Profile, Audit } from './pages'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { AppLayout } from '@/layouts/AppLayout'
 
@@ -9,6 +9,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Registration />} />
+        <Route path="/redefinir-senha" element={<ResetPassword />} />
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<Landing />} />

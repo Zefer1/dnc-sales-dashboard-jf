@@ -487,7 +487,7 @@ function Leads() {
     </Dialog>
 
     <CardComponent ref={createCardRef}>
-      <StyledP weight={600} size={16} lineheight={24}>
+      <StyledP $weight={600} size={16} $lineheight={24}>
         Nova Lead
       </StyledP>
       <Box component="form" onSubmit={handleCreate} sx={{ marginTop: pxToRem(12) }}>
@@ -541,7 +541,7 @@ function Leads() {
           </Box>
 
           <FormControl>
-            <StyledP weight={600} size={14} lineheight={20}>
+            <StyledP $weight={600} size={14} $lineheight={20}>
               Modo
             </StyledP>
             <RadioGroup
@@ -579,7 +579,7 @@ function Leads() {
           flexWrap: 'wrap',
         }}
       >
-        <StyledP weight={600} size={16} lineheight={24}>
+        <StyledP $weight={600} size={16} $lineheight={24}>
           Lista
         </StyledP>
         <Box sx={{ display: 'inline-flex', gap: pxToRem(8), flexWrap: 'wrap' }}>

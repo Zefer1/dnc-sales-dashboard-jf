@@ -100,7 +100,7 @@ function Audit() {
 
       <CardComponent>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
-          <StyledP weight={600} size={16} lineheight={24}>
+          <StyledP $weight={600} size={16} $lineheight={24}>
             Eventos
           </StyledP>
           <Button variant="outlined" onClick={() => void loadAudit()} disabled={loading || !auth?.token}>
@@ -124,7 +124,7 @@ function Audit() {
         <DialogContent>
           <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(8) }}>
             <Box>
-              <StyledP weight={600} size={14} lineheight={20}>
+              <StyledP $weight={600} size={14} $lineheight={20}>
                 Evento
               </StyledP>
               <Box style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 12 }}>
