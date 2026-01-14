@@ -1,11 +1,12 @@
-import { AvatarsList, CardComponent, CustomChart, CustomTable, StyledH1, StyledP } from '@/components'
+import { AppTooltip, AvatarsList, CardComponent, CustomChart, CustomTable, StyledH1, StyledP } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { pxToRem } from '@/utils'
-import { Box, Button, CircularProgress, Tooltip } from '@mui/material'
+import { Box, Button, CircularProgress } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/api/client'
 import { useTranslation } from 'react-i18next'
+import { usePreferences } from '@/hooks/usePreferences'
 
 type Lead = {
   id: number
@@ -32,6 +33,7 @@ function Home() {
   const auth = useContext(AuthContext)
   const navigate = useNavigate()
   const { t } = useTranslation('home')
+  const prefs = usePreferences()
 
   const displayName = auth?.user?.name?.trim()
 
@@ -62,6 +64,18 @@ function Home() {
   useEffect(() => {
     void loadSummary()
   }, [loadSummary])
+
+  useEffect(() => {
+    if (!prefs.dashboardAutoRefresh) return
+    if (!auth?.token) return
+
+    const id = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      void loadSummary()
+    }, 30_000)
+
+    return () => window.clearInterval(id)
+  }, [auth?.token, loadSummary, prefs.dashboardAutoRefresh])
 
   const leadsByMonthLabels = data?.leadsByMonth?.labels ?? []
   const leadsByMonthData = data?.leadsByMonth?.data ?? []
@@ -110,7 +124,7 @@ function Home() {
         <span key={`contact-${lead.id}`}>{lead.contact ?? '-'}</span>,
         <span key={`source-${lead.id}`}>{lead.source ?? '-'}</span>,
         <Box key={`actions-${lead.id}`} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Tooltip title={t('table.edit')} arrow>
+          <AppTooltip title={t('table.edit')} arrow>
             <span>
               <Button
                 variant="text"
@@ -121,8 +135,8 @@ function Home() {
                 {t('actions.edit')}
               </Button>
             </span>
-          </Tooltip>
-          <Tooltip title={t('table.view')} arrow>
+          </AppTooltip>
+          <AppTooltip title={t('table.view')} arrow>
             <span>
               <Button
                 variant="text"
@@ -133,7 +147,7 @@ function Home() {
                 {t('actions.view')}
               </Button>
             </span>
-          </Tooltip>
+          </AppTooltip>
         </Box>,
       ]
     })

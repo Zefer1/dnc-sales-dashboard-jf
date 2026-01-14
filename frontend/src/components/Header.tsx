@@ -1,13 +1,12 @@
 import styled from 'styled-components'
 import { Link, NavLink } from 'react-router-dom'
-import { Logo, StyledButton } from '@/components'
-import { Avatar, Box, Button, Container, Menu, MenuItem, Switch, Tooltip, useMediaQuery } from '@mui/material'
+import { AppTooltip, Logo, StyledButton } from '@/components'
+import { Avatar, Box, Button, Container, Menu, MenuItem, Switch, useMediaQuery } from '@mui/material'
 import { pxToRem } from '@/utils'
 import { useContext, useMemo, useState } from 'react'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { AppThemeContext } from '@/contexts/AppThemeContext'
 import { useTranslation } from 'react-i18next'
-
 
 const StyledHeader = styled.header`
 	background-color: ${(props) => props.theme.appBackground};
@@ -42,14 +41,13 @@ const NavItem = styled(NavLink)`
 	}
 `;
 
-
 function Header() {
 	const auth = useContext(AuthContext)
 	const theme = useContext(AppThemeContext)
 	const { t } = useTranslation('common')
 	const isAuthed = Boolean(auth?.token)
 	const isMobile = useMediaQuery('(max-width:600px)')
-	const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
+	const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null)
 	const menuOpen = Boolean(menuAnchorEl)
 
 	const themeLabel = useMemo(() => {
@@ -81,11 +79,7 @@ function Header() {
 
 					{isMobile ? (
 						<>
-							<Button
-								variant="text"
-								onClick={openMenu}
-								aria-label={t('nav.menu')}
-							>
+							<Button variant="text" onClick={openMenu} aria-label={t('nav.menu')}>
 								{t('nav.menu')}
 							</Button>
 							<Menu
@@ -109,9 +103,7 @@ function Header() {
 										<MenuItem component={Link} to="/settings" onClick={closeMenu}>
 											{t('nav.settings')}
 										</MenuItem>
-										<MenuItem onClick={logoutAndClose}>
-											{t('nav.logout')}
-										</MenuItem>
+										<MenuItem onClick={logoutAndClose}>{t('nav.logout')}</MenuItem>
 									</>
 								) : (
 									<>
@@ -148,7 +140,7 @@ function Header() {
 									<NavItem to="/audit">{t('nav.audit')}</NavItem>
 									<NavItem to="/settings">{t('nav.settings')}</NavItem>
 
-									<Tooltip title={t('theme.toggle')} arrow>
+									<AppTooltip title={t('theme.toggle')} arrow>
 										<Button
 											variant="text"
 											onClick={() => theme?.toggleTheme()}
@@ -157,7 +149,7 @@ function Header() {
 										>
 											{theme?.appTheme === 'dark' ? t('theme.dark') : t('theme.light')}
 										</Button>
-									</Tooltip>
+									</AppTooltip>
 
 									<StyledButton
 										className="borderless-alert inline"
@@ -180,7 +172,7 @@ function Header() {
 								<>
 									<NavItem to="/">{t('nav.start')}</NavItem>
 
-									<Tooltip title={t('theme.toggle')} arrow>
+									<AppTooltip title={t('theme.toggle')} arrow>
 										<Button
 											variant="text"
 											onClick={() => theme?.toggleTheme()}
@@ -189,7 +181,7 @@ function Header() {
 										>
 											{theme?.appTheme === 'dark' ? t('theme.dark') : t('theme.light')}
 										</Button>
-									</Tooltip>
+									</AppTooltip>
 
 									<Link to="/login" style={{ textDecoration: 'none' }}>
 										<StyledButton className="primary inline" type="button">

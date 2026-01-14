@@ -3,8 +3,9 @@ import { AuthContext } from '@/contexts/AuthContextValue'
 import { AppThemeContext } from '@/contexts/AppThemeContext'
 import { useToast } from '@/contexts/ToastContext'
 import { api } from '@/api/client'
-import { pxToRem } from '@/utils'
+import { loadPrefs, savePrefs, type LocalPreferences, pxToRem } from '@/utils'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { AppTooltip } from '@/components'
 import {
   Box,
   Button,
@@ -14,70 +15,10 @@ import {
   MenuItem,
   Select,
   Switch,
-  Tooltip,
 } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-
-type LocalPreferences = {
-  language: 'pt-PT' | 'pt-BR' | 'en-US'
-  tableDensity: 'comfortable' | 'compact'
-  reduceMotion: boolean
-  highContrast: boolean
-  tooltips: boolean
-  toasts: boolean
-  dashboardAutoRefresh: boolean
-  auditTake: number
-}
-
-const PREFS_KEY = 'urbancrm.settings.preferences.v1'
-
-function loadPrefs(): LocalPreferences {
-  try {
-    const raw = localStorage.getItem(PREFS_KEY)
-    if (!raw) {
-      return {
-        language: 'pt-PT',
-        tableDensity: 'comfortable',
-        reduceMotion: false,
-        highContrast: false,
-        tooltips: true,
-        toasts: true,
-        dashboardAutoRefresh: true,
-        auditTake: 100,
-      }
-    }
-
-    const parsed = JSON.parse(raw) as Partial<LocalPreferences>
-    return {
-      language: parsed.language ?? 'pt-PT',
-      tableDensity: parsed.tableDensity ?? 'comfortable',
-      reduceMotion: Boolean(parsed.reduceMotion),
-      highContrast: Boolean(parsed.highContrast),
-      tooltips: parsed.tooltips ?? true,
-      toasts: parsed.toasts ?? true,
-      dashboardAutoRefresh: parsed.dashboardAutoRefresh ?? true,
-      auditTake: typeof parsed.auditTake === 'number' ? parsed.auditTake : 100,
-    }
-  } catch {
-    return {
-      language: 'pt-PT',
-      tableDensity: 'comfortable',
-      reduceMotion: false,
-      highContrast: false,
-      tooltips: true,
-      toasts: true,
-      dashboardAutoRefresh: true,
-      auditTake: 100,
-    }
-  }
-}
-
-function savePrefs(prefs: LocalPreferences) {
-  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
-  localStorage.setItem('settings_toasts_enabled', prefs.toasts ? 'true' : 'false')
-}
 
 function Settings() {
   const auth = useContext(AuthContext)
@@ -352,14 +293,14 @@ function Settings() {
             label={t('notifications.tooltips')}
           />
 
-          <Tooltip title={t('notifications.autoRefreshHint')} arrow>
+          <AppTooltip title={t('notifications.autoRefreshHint')} arrow>
             <Box>
               <FormControlLabel
                 control={<Switch checked={prefs.dashboardAutoRefresh} onChange={(e) => setPrefs((p) => ({ ...p, dashboardAutoRefresh: e.target.checked }))} />}
                 label={t('notifications.autoRefresh')}
               />
             </Box>
-          </Tooltip>
+          </AppTooltip>
         </Box>
       </CardComponent>
 
