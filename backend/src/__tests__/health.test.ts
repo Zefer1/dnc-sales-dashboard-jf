@@ -1,10 +1,11 @@
 import request from 'supertest'
 import { beforeAll, describe, expect, it } from 'vitest'
+import type { Express } from 'express'
 import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 
-let app: typeof import('express').default
+let app: Express
 
 beforeAll(async () => {
   // Create an isolated test DB and apply migrations.

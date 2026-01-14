@@ -256,12 +256,10 @@ app.post('/api/password/forgot', async (req, res) => {
     metadata: { email },
   })
 
-  if (shouldReturnDevToken()) {
-    return res.status(200).json({ ok: true, devToken: rawToken })
-  }
-
   const resetLink = getPasswordResetLink(rawToken)
-  if (resetLink && canSendEmail()) {
+  const canEmail = Boolean(resetLink) && canSendEmail()
+
+  if (canEmail) {
     try {
       await sendEmail({
         to: user.email,
@@ -275,13 +273,26 @@ app.post('/api/password/forgot', async (req, res) => {
           `<p><a href="${resetLink}">Clique aqui para redefinir</a></p>` +
           `<p>Se não foi você, ignore este email.</p>`,
       })
+
+      return res.status(200).json({ ok: true })
     } catch {
-      // Keep response generic (no email enumeration). User can retry.
+      // In production, keep response generic and discard the token.
+      // In non-production, return a dev token so local development can continue.
+      if (shouldReturnDevToken()) {
+        return res.status(200).json({ ok: true, devToken: rawToken })
+      }
+
       await prisma.$executeRaw`
         DELETE FROM "PasswordResetToken"
         WHERE "tokenHash" = ${tokenHash}
       `
+
+      return res.status(200).json({ ok: true })
     }
+  }
+
+  if (shouldReturnDevToken()) {
+    return res.status(200).json({ ok: true, devToken: rawToken })
   }
 
   return res.status(200).json({ ok: true })
