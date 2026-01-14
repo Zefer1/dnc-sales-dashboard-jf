@@ -31,6 +31,8 @@ function Home() {
   const auth = useContext(AuthContext)
   const navigate = useNavigate()
 
+  const displayName = auth?.user?.name?.trim()
+
   const [data, setData] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -133,6 +135,10 @@ function Home() {
   return (
     <>
       <StyledH1>Home</StyledH1>
+
+      <Box sx={{ marginTop: pxToRem(4), marginBottom: pxToRem(16) }}>
+        <StyledP color="#666">{displayName ? `Bem-vindo, ${displayName}!` : 'Bem-vindo!'}</StyledP>
+      </Box>
 
       <CardComponent>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
