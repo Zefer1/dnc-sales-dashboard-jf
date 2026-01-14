@@ -1,0 +1,37 @@
+{
+  "nav": {
+    "home": "Home",
+    "leads": "Leads",
+    "audit": "Audit",
+    "settings": "Settings",
+    "logout": "Sign out",
+    "login": "Login",
+    "register": "Create account",
+    "menu": "Menu",
+    "start": "Start"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "toggle": "Toggle theme"
+  },
+  "buttons": {
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "refresh": "Refresh",
+    "add": "Add",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "import": "Import",
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "clear": "Clear"
+  },
+  "states": {
+    "loading": "Loading…",
+    "error": "Something went wrong"
+  }
+}

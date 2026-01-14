@@ -1,0 +1,63 @@
+{
+  "title": "Configurações",
+  "sections": {
+    "account": "Conta",
+    "security": "Segurança",
+    "appearance": "Aparência",
+    "language": "Idioma e formatos",
+    "notifications": "Notificações",
+    "privacy": "Privacidade",
+    "developer": "Developer"
+  },
+  "account": {
+    "email": "Email",
+    "name": "Nome",
+    "namePlaceholder": "Seu nome",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "forgot": "Esqueceu a senha?",
+    "nameRequired": "Nome é obrigatório",
+    "profileOk": "Perfil atualizado",
+    "profileFail": "Falha ao atualizar perfil"
+  },
+  "security": {
+    "current": "Senha atual",
+    "new": "Nova senha (mín. 8)",
+    "confirm": "Confirmar nova senha",
+    "change": "Alterar senha",
+    "changing": "Alterando…",
+    "logout": "Sair da conta",
+    "mismatch": "As senhas não coincidem",
+    "short": "A nova senha deve ter pelo menos 8 caracteres",
+    "ok": "Senha alterada",
+    "fail": "Falha ao alterar senha"
+  },
+  "appearance": {
+    "theme": "Tema",
+    "toggle": "Alternar",
+    "compact": "Tabelas compactas",
+    "reduceMotion": "Reduzir animações",
+    "highContrast": "Alto contraste (local)"
+  },
+  "language": {
+    "label": "Idioma",
+    "ptPT": "Português (Portugal)",
+    "ptBR": "Português (Brasil)",
+    "enUS": "English (US)"
+  },
+  "notifications": {
+    "toasts": "Toasts (mensagens no fundo)",
+    "tooltips": "Tooltips (dicas ao passar o mouse)",
+    "autoRefresh": "Dashboard: auto-atualizar",
+    "autoRefreshHint": "Este toggle ainda não altera comportamento no app"
+  },
+  "privacy": {
+    "clearLocal": "Limpar dados locais",
+    "cleared": "Preferências locais limpas",
+    "logout": "Logout"
+  },
+  "developer": {
+    "apiBase": "API base",
+    "userId": "User ID"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "title": "Settings",
+  "sections": {
+    "account": "Account",
+    "security": "Security",
+    "appearance": "Appearance",
+    "language": "Language & formats",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "developer": "Developer"
+  },
+  "account": {
+    "email": "Email",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "save": "Save",
+    "saving": "Saving…",
+    "forgot": "Forgot password?",
+    "nameRequired": "Name is required",
+    "profileOk": "Profile updated",
+    "profileFail": "Failed to update profile"
+  },
+  "security": {
+    "current": "Current password",
+    "new": "New password (min. 8)",
+    "confirm": "Confirm new password",
+    "change": "Change password",
+    "changing": "Changing…",
+    "logout": "Sign out",
+    "mismatch": "Passwords don't match",
+    "short": "New password must be at least 8 characters",
+    "ok": "Password changed",
+    "fail": "Failed to change password"
+  },
+  "appearance": {
+    "theme": "Theme",
+    "toggle": "Toggle",
+    "compact": "Compact tables",
+    "reduceMotion": "Reduce animations",
+    "highContrast": "High contrast (local)"
+  },
+  "language": {
+    "label": "Language",
+    "ptPT": "Portuguese (Portugal)",
+    "ptBR": "Portuguese (Brazil)",
+    "enUS": "English (US)"
+  },
+  "notifications": {
+    "toasts": "Toasts",
+    "tooltips": "Tooltips",
+    "autoRefresh": "Dashboard: auto-refresh",
+    "autoRefreshHint": "This toggle doesn't change behavior yet"
+  },
+  "privacy": {
+    "clearLocal": "Clear local data",
+    "cleared": "Local preferences cleared",
+    "logout": "Logout"
+  },
+  "developer": {
+    "apiBase": "API base",
+    "userId": "User ID"
+  }
+}

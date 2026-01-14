@@ -6,6 +6,7 @@ import { pxToRem } from '@/utils'
 import { useContext, useMemo, useState } from 'react'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { AppThemeContext } from '@/contexts/AppThemeContext'
+import { useTranslation } from 'react-i18next'
 
 
 const StyledHeader = styled.header`
@@ -45,14 +46,15 @@ const NavItem = styled(NavLink)`
 function Header() {
 	const auth = useContext(AuthContext)
 	const theme = useContext(AppThemeContext)
+	const { t } = useTranslation('common')
 	const isAuthed = Boolean(auth?.token)
 	const isMobile = useMediaQuery('(max-width:600px)')
 	const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
 	const menuOpen = Boolean(menuAnchorEl)
 
 	const themeLabel = useMemo(() => {
-		return theme?.appTheme === 'dark' ? 'Tema escuro' : 'Tema claro'
-	}, [theme?.appTheme])
+		return theme?.appTheme === 'dark' ? t('theme.dark') : t('theme.light')
+	}, [theme?.appTheme, t])
 
 	const openMenu = (event: React.MouseEvent<HTMLElement>) => setMenuAnchorEl(event.currentTarget)
 	const closeMenu = () => setMenuAnchorEl(null)
@@ -82,9 +84,9 @@ function Header() {
 							<Button
 								variant="text"
 								onClick={openMenu}
-								aria-label="Abrir menu"
+								aria-label={t('nav.menu')}
 							>
-								Menu
+								{t('nav.menu')}
 							</Button>
 							<Menu
 								anchorEl={menuAnchorEl}
@@ -96,31 +98,31 @@ function Header() {
 								{isAuthed ? (
 									<>
 										<MenuItem component={Link} to="/home" onClick={closeMenu}>
-											Home
+											{t('nav.home')}
 										</MenuItem>
 										<MenuItem component={Link} to="/leads" onClick={closeMenu}>
-											Leads
+											{t('nav.leads')}
 										</MenuItem>
 										<MenuItem component={Link} to="/audit" onClick={closeMenu}>
-											Auditoria
+											{t('nav.audit')}
 										</MenuItem>
 										<MenuItem component={Link} to="/settings" onClick={closeMenu}>
-											Settings
+											{t('nav.settings')}
 										</MenuItem>
 										<MenuItem onClick={logoutAndClose}>
-											Sair
+											{t('nav.logout')}
 										</MenuItem>
 									</>
 								) : (
 									<>
 										<MenuItem component={Link} to="/" onClick={closeMenu}>
-											Início
+											{t('nav.start')}
 										</MenuItem>
 										<MenuItem component={Link} to="/login" onClick={closeMenu}>
-											Login
+											{t('nav.login')}
 										</MenuItem>
 										<MenuItem component={Link} to="/cadastro" onClick={closeMenu}>
-											Criar conta
+											{t('nav.register')}
 										</MenuItem>
 									</>
 								)}
@@ -131,7 +133,7 @@ function Header() {
 										<Switch
 											checked={theme?.appTheme === 'dark'}
 											onChange={() => theme?.toggleTheme()}
-											inputProps={{ 'aria-label': 'Alternar tema' }}
+											inputProps={{ 'aria-label': t('theme.toggle') }}
 										/>
 									</Box>
 								</MenuItem>
@@ -141,19 +143,19 @@ function Header() {
 						<Nav>
 							{isAuthed ? (
 								<>
-									<NavItem to="/home">Home</NavItem>
-									<NavItem to="/leads">Leads</NavItem>
-									<NavItem to="/audit">Auditoria</NavItem>
-									<NavItem to="/settings">Settings</NavItem>
+									<NavItem to="/home">{t('nav.home')}</NavItem>
+									<NavItem to="/leads">{t('nav.leads')}</NavItem>
+									<NavItem to="/audit">{t('nav.audit')}</NavItem>
+									<NavItem to="/settings">{t('nav.settings')}</NavItem>
 
-									<Tooltip title="Alternar tema" arrow>
+									<Tooltip title={t('theme.toggle')} arrow>
 										<Button
 											variant="text"
 											onClick={() => theme?.toggleTheme()}
-											aria-label="Alternar tema"
+											aria-label={t('theme.toggle')}
 											size="small"
 										>
-											{theme?.appTheme === 'dark' ? 'Escuro' : 'Claro'}
+											{theme?.appTheme === 'dark' ? t('theme.dark') : t('theme.light')}
 										</Button>
 									</Tooltip>
 
@@ -161,9 +163,9 @@ function Header() {
 										className="borderless-alert inline"
 										type="button"
 										onClick={() => auth?.logout()}
-										aria-label="Sair"
+										aria-label={t('nav.logout')}
 									>
-										Sair
+										{t('nav.logout')}
 									</StyledButton>
 
 									<Link to="/settings" aria-label="Abrir settings">
@@ -176,27 +178,27 @@ function Header() {
 								</>
 							) : (
 								<>
-									<NavItem to="/">Início</NavItem>
+									<NavItem to="/">{t('nav.start')}</NavItem>
 
-									<Tooltip title="Alternar tema" arrow>
+									<Tooltip title={t('theme.toggle')} arrow>
 										<Button
 											variant="text"
 											onClick={() => theme?.toggleTheme()}
-											aria-label="Alternar tema"
+											aria-label={t('theme.toggle')}
 											size="small"
 										>
-											{theme?.appTheme === 'dark' ? 'Escuro' : 'Claro'}
+											{theme?.appTheme === 'dark' ? t('theme.dark') : t('theme.light')}
 										</Button>
 									</Tooltip>
 
 									<Link to="/login" style={{ textDecoration: 'none' }}>
 										<StyledButton className="primary inline" type="button">
-											Login
+											{t('nav.login')}
 										</StyledButton>
 									</Link>
 									<Link to="/cadastro" style={{ textDecoration: 'none' }}>
 										<StyledButton className="primary inline" type="button">
-											Criar conta
+											{t('nav.register')}
 										</StyledButton>
 									</Link>
 								</>

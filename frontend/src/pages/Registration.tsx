@@ -6,6 +6,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFormValidation } from '@/hooks'
 import { AuthContext } from '@/contexts/AuthContextValue'
+import { useTranslation } from 'react-i18next'
 
 
 
@@ -13,16 +14,17 @@ import { AuthContext } from '@/contexts/AuthContextValue'
 function Registration() {
   const auth = useContext(AuthContext)
   const navigate = useNavigate()
+  const { t } = useTranslation('auth')
   const [statusMessage, setStatusMessage] = useState<
     { msg: string; type: 'error' | 'success' } | undefined
   >(undefined)
 
   const baseInputs = useMemo(
     () => [
-      { type: 'email', placeholder: 'Email' },
-      { type: 'password', placeholder: 'Senha' },
+      { type: 'email', placeholder: t('register.email') },
+      { type: 'password', placeholder: t('register.password') },
     ],
-    []
+    [t]
   )
 
   const { formValues, formValid, handleChange } = useFormValidation(baseInputs)
@@ -44,7 +46,7 @@ function Registration() {
 
     try {
       if (!auth) {
-        setStatusMessage({ msg: 'Auth indisponível', type: 'error' })
+        setStatusMessage({ msg: t('register.errorUnavailable'), type: 'error' })
         return
       }
 
@@ -53,10 +55,10 @@ function Registration() {
         password: String(formValues[1] ?? ''),
       })
 
-      setStatusMessage({ msg: 'Sucesso!', type: 'success' })
+      setStatusMessage({ msg: t('register.success'), type: 'success' })
       navigate('/home')
     } catch {
-      setStatusMessage({ msg: 'Falha no cadastro', type: 'error' })
+      setStatusMessage({ msg: t('register.error'), type: 'error' })
     }
   }
 
@@ -71,13 +73,13 @@ function Registration() {
             <Container maxWidth="sm">
               <Box sx={{ marginBottom: pxToRem(24) }}><Logo height={41} width={100} /></Box>
               <Box sx={{ marginBottom: pxToRem(24) }}>
-                <StyledH1>Faça seu cadastro</StyledH1>
-                <StyledP>Primeiro, diga-nos quem você é.</StyledP>
+                <StyledH1>{t('register.title')}</StyledH1>
+                <StyledP>{t('register.subtitle')}</StyledP>
                 <StyledUl>
-                  <li>Entre 8 e 16 caracteres;</li>
-                  <li>Pelo menos uma letra maiúscula;</li>
-                  <li>Pelo menos um caractere especial;</li>
-                  <li>Pelo menos um número</li>
+                  <li>{t('register.requirements.len')}</li>
+                  <li>{t('register.requirements.upper')}</li>
+                  <li>{t('register.requirements.special')}</li>
+                  <li>{t('register.requirements.number')}</li>
                 </StyledUl>
               </Box>
               
@@ -88,7 +90,7 @@ function Registration() {
                   {
                     className: 'primary',
                     type: 'submit',
-                    children: 'Cadastrar',
+                    children: t('register.submit'),
                     disabled: !formValid,
                   },
                 ]}

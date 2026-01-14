@@ -1,0 +1,46 @@
+{
+  "title": "Home",
+  "greeting": "Bem-vindo, {{name}}!",
+  "greetingDefault": "Bem-vindo!",
+  "overview": {
+    "title": "Visão geral",
+    "subtitle": "Leads do seu usuário",
+    "total": "Total de leads",
+    "thisMonth": "Leads neste mês"
+  },
+  "buttons": {
+    "addLead": "Adicionar lead",
+    "viewLeads": "Ver leads",
+    "refresh": "Atualizar"
+  },
+  "actions": {
+    "edit": "Editar",
+    "view": "Ver"
+  },
+  "sections": {
+    "recent": "Recentes",
+    "latest": "Últimas leads",
+    "byMonth": "Leads por mês"
+  },
+  "empty": {
+    "noLead": "Nenhuma lead ainda",
+    "noLeadDesc": "Crie sua primeira lead para ver dados aqui"
+  },
+  "table": {
+    "name": "Nome",
+    "contact": "Contato",
+    "source": "Origem",
+    "actions": "Ações",
+    "edit": "Editar no Leads",
+    "view": "Ver no Leads"
+  },
+  "labels": {
+    "source": "Origem: {{source}}",
+    "contact": "Contato: {{contact}}",
+    "noSource": "Sem origem",
+    "noContact": "Sem contato"
+  },
+  "errors": {
+    "load": "Falha ao carregar dados do dashboard"
+  }
+}

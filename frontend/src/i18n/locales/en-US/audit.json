@@ -1,0 +1,26 @@
+{
+  "title": "Audit",
+  "subtitle": "Action history (create/update/delete/import).",
+  "eventsTitle": "Events",
+  "tooltips": {
+    "viewDetails": "View details"
+  },
+  "buttons": {
+    "refresh": "Refresh",
+    "details": "Details",
+    "close": "Close"
+  },
+  "headers": {
+    "when": "When",
+    "action": "Action",
+    "entity": "Entity",
+    "actions": "Actions"
+  },
+  "dialog": {
+    "title": "Details",
+    "eventLabel": "Event"
+  },
+  "messages": {
+    "loadFail": "Failed to load audit"
+  }
+}

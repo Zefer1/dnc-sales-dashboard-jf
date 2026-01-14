@@ -1,0 +1,70 @@
+{
+  "title": "Leads",
+  "subtitle": "Create, list and remove leads (stored in the database).",
+  "newLead": "New lead",
+  "placeholders": {
+    "name": "Name",
+    "contact": "Contact (optional)",
+    "source": "Source (optional)",
+    "search": "Search (name, contact, source)"
+  },
+  "headers": {
+    "name": "Name",
+    "contact": "Contact",
+    "source": "Source",
+    "createdAt": "Created at",
+    "actions": "Actions"
+  },
+  "buttons": {
+    "add": "Add",
+    "creating": "Creating…",
+    "refresh": "Refresh",
+    "clearSearch": "Clear",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting…",
+    "import": "Import",
+    "importing": "Importing…",
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…"
+  },
+  "tooltips": {
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "import": "Import CSV/XLSX",
+    "edit": "Edit lead",
+    "delete": "Delete lead"
+  },
+  "dialogs": {
+    "editTitle": "Edit lead",
+    "importTitle": "Import leads",
+    "mode": "Mode",
+    "skipDup": "Skip exact duplicates (name + contact + source)",
+    "alwaysCreate": "Always create"
+  },
+  "messages": {
+    "nameRequired": "Name is required",
+    "loadFail": "Failed to load leads",
+    "createOk": "Lead created successfully",
+    "createFail": "Failed to create lead",
+    "updateOk": "Lead updated",
+    "updateFail": "Failed to update lead",
+    "deleteOk": "Lead removed",
+    "deleteFail": "Failed to remove lead",
+    "noLeadsToExport": "No leads to export",
+    "csvExported": "CSV exported",
+    "excelExported": "Excel exported",
+    "selectFile": "Select a CSV or XLSX file",
+    "unsupportedFormat": "Unsupported format. Use .csv or .xlsx",
+    "readCsvFail": "Failed to read CSV",
+    "noValid": "No valid leads found in file",
+    "importOk": "Import finished: {{created}} created, {{skipped}} skipped",
+    "importFail": "Failed to import leads"
+  },
+  "counts": {
+    "filtered": "{{filtered}} / {{total}}"
+  }
+}

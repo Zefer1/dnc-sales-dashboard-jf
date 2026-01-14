@@ -1,10 +1,11 @@
 import { CardComponent, CustomTable, StyledH1, StyledP } from '@/components'
 import { AuthContext } from '@/contexts/AuthContextValue'
 import { useToast } from '@/contexts/ToastContext'
-import { pxToRem } from '@/utils'
+import { formatDateTime, pxToRem } from '@/utils'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '@/api/client'
+import { useTranslation } from 'react-i18next'
 
 type AuditEvent = {
   id: number
@@ -24,6 +25,7 @@ type AuditResponse = {
 function Audit() {
   const auth = useContext(AuthContext)
   const toast = useToast()
+  const { t } = useTranslation('audit')
 
   const [events, setEvents] = useState<AuditEvent[]>([])
   const [loading, setLoading] = useState(false)
@@ -43,11 +45,11 @@ function Audit() {
       const response = await api.get<AuditResponse>('/api/audit?take=100', { headers: authHeaders })
       setEvents(response.data.events)
     } catch {
-      toast.showToast('Falha ao carregar auditoria', 'error')
+      toast.showToast(t('messages.loadFail'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [auth?.token, authHeaders, toast])
+  }, [auth?.token, authHeaders, toast, t])
 
   useEffect(() => {
     void loadAudit()
@@ -65,8 +67,7 @@ function Audit() {
 
   const rows = useMemo(() => {
     return events.map((e) => {
-      const dt = new Date(e.createdAt)
-      const dateLabel = Number.isNaN(dt.getTime()) ? e.createdAt : dt.toLocaleString()
+      const dateLabel = formatDateTime(e.createdAt)
       const entity = e.entityId ? `${e.entityType} #${e.entityId}` : e.entityType
 
       return [
@@ -74,32 +75,42 @@ function Audit() {
         <span key={`action-${e.id}`}>{e.action}</span>,
         <span key={`entity-${e.id}`}>{entity}</span>,
         <Box key={`actions-${e.id}`} sx={{ display: 'inline-flex', gap: pxToRem(8), justifyContent: 'flex-end' }}>
-          <Tooltip title="Ver detalhes" arrow>
+          <Tooltip title={t('tooltips.viewDetails')} arrow>
             <span>
-              <Button variant="text" size="small" onClick={() => openDetails(e)} aria-label={`Ver detalhes ${e.action}`}>
-                Detalhes
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => openDetails(e)}
+                aria-label={`${t('tooltips.viewDetails')} ${e.action}`}
+              >
+                {t('buttons.details')}
               </Button>
             </span>
           </Tooltip>
         </Box>,
       ]
     })
-  }, [events])
+  }, [events, t])
+
+  const tableHeaders = useMemo(
+    () => [t('headers.when'), t('headers.action'), t('headers.entity'), t('headers.actions')],
+    [t]
+  )
 
   return (
     <>
       <Box>
-        <StyledH1>Auditoria</StyledH1>
-        <StyledP color="#666">Histórico de ações (criação/edição/exclusão/importação).</StyledP>
+        <StyledH1>{t('title')}</StyledH1>
+        <StyledP color="#666">{t('subtitle')}</StyledP>
       </Box>
 
       <CardComponent>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
           <StyledP $weight={600} size={16} $lineheight={24}>
-            Eventos
+            {t('eventsTitle')}
           </StyledP>
           <Button variant="outlined" onClick={() => void loadAudit()} disabled={loading || !auth?.token}>
-            Atualizar
+            {t('buttons.refresh')}
           </Button>
         </Box>
 
@@ -109,18 +120,18 @@ function Audit() {
               <CircularProgress size={24} />
             </Box>
           ) : (
-            <CustomTable headers={['Quando', 'Ação', 'Entidade', 'Ações']} rows={rows} />
+            <CustomTable headers={tableHeaders} rows={rows} />
           )}
         </Box>
       </CardComponent>
 
       <Dialog open={detailsOpen} onClose={closeDetails} fullWidth maxWidth="md">
-        <DialogTitle>Detalhes</DialogTitle>
+        <DialogTitle>{t('dialog.title')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'grid', gap: pxToRem(12), marginTop: pxToRem(8) }}>
             <Box>
               <StyledP $weight={600} size={14} $lineheight={20}>
-                Evento
+                {t('dialog.eventLabel')}
               </StyledP>
               <Box style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace', fontSize: 12 }}>
                 {selectedEvent ? JSON.stringify(selectedEvent, null, 2) : ''}
@@ -129,7 +140,7 @@ function Audit() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDetails}>Fechar</Button>
+          <Button onClick={closeDetails}>{t('buttons.close')}</Button>
         </DialogActions>
       </Dialog>
     </>
