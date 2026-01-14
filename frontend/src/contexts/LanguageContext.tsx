@@ -41,11 +41,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => readLanguageFromPrefs())
 
   const setLanguage = useCallback((lang: SupportedLanguage) => {
-    setLanguageState(lang)
     writeLanguageToPrefs(lang)
+
+    // Apply immediately so UI updates without relying on effect timing.
+    void i18n.changeLanguage(lang)
+
+    setLanguageState(lang)
   }, [])
 
   useEffect(() => {
+    // Ensure i18n stays in sync (e.g., initial mount).
     void i18n.changeLanguage(language)
 
     // Keep document locale metadata in sync.
