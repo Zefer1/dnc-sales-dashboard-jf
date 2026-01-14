@@ -145,7 +145,10 @@ function shouldReturnDevToken() {
 }
 
 function getPasswordResetLink(rawToken: string) {
-  const base = process.env.PASSWORD_RESET_BASE_URL ?? process.env.FRONTEND_URL
+  const base =
+    process.env.PASSWORD_RESET_BASE_URL ??
+    process.env.FRONTEND_URL ??
+    (shouldReturnDevToken() ? 'http://localhost:5173' : undefined)
   if (!base) {
     return null
   }
@@ -289,7 +292,12 @@ app.post('/api/password/forgot', async (req, res) => {
       })
 
       return res.status(200).json({ ok: true })
-    } catch {
+    } catch (err) {
+      if (shouldReturnDevToken()) {
+        // eslint-disable-next-line no-console
+        console.error('Password reset email failed to send:', err)
+      }
+
       // In production, keep response generic and discard the token.
       // In non-production, return a dev token so local development can continue.
       if (shouldReturnDevToken()) {

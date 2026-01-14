@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    strictPort: true,
+    strictPort: false,
   },
   optimizeDeps: {
     include: ['@emotion/styled']
