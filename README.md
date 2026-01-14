@@ -9,7 +9,7 @@ Projeto full-stack para o UrbanCRM, com autenticação (JWT) e CRUD de Leads.
 
 ## Estrutura
 
-- `./` (frontend React + Vite)
+- `frontend/` (React + Vite)
 - `backend/` (API Express + Prisma)
 
 ## Configuração de ambiente
@@ -25,9 +25,10 @@ copy .env.example .env
 
 ### Frontend
 
-Crie um `.env` na raiz do frontend baseado no exemplo:
+Crie um `.env` em `frontend/` baseado no exemplo:
 
 ```bash
+cd frontend
 copy .env.example .env
 ```
 
@@ -52,7 +53,7 @@ API: `http://localhost:3000`
 Em outro terminal:
 
 ```bash
-cd ..
+cd frontend
 npm install
 npm run dev
 ```

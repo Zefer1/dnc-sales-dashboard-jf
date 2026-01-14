@@ -1,0 +1,47 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build (frontend)",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "build:frontend"],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build (backend)",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "build:backend"],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "test (backend)",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "test"],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "dev (frontend)",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "dev:frontend"],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "dev (backend)",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "dev:backend"],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
