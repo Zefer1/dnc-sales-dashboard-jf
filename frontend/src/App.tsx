@@ -2,17 +2,21 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import { Landing, Login, Registration, ResetPassword, Home, Leads, Settings, Audit } from './pages'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { AppLayout } from '@/layouts/AppLayout'
+import { PublicLayout } from '@/layouts/PublicLayout'
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Landing />} />
+        </Route>
+
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Registration />} />
         <Route path="/redefinir-senha" element={<ResetPassword />} />
 
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Landing />} />
           <Route
             path="/home"
             element={
