@@ -8,8 +8,8 @@ function Landing() {
   const { t } = useTranslation('landing')
 
   return (
-    <>
-      <Box>
+    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: pxToRem(16) }}>
+      <Box sx={{ textAlign: 'center' }}>
         <StyledH1>{t('title')}</StyledH1>
         <StyledP color="#666">{t('subtitle')}</StyledP>
       </Box>
@@ -34,7 +34,7 @@ function Landing() {
           </Link>
         </Box>
       </CardComponent>
-    </>
+    </Box>
   )
 }
 
