@@ -243,10 +243,24 @@ app.post('/api/password/forgot', async (req, res) => {
   const tokenHash = sha256Hex(rawToken)
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000)
 
-  await prisma.$executeRaw`
-    INSERT INTO "PasswordResetToken" ("tokenHash", "expiresAt", "userId")
-    VALUES (${tokenHash}, ${expiresAt}, ${user.id})
-  `
+  try {
+    await prisma.passwordResetToken.create({
+      data: {
+        tokenHash,
+        expiresAt,
+        userId: user.id,
+      },
+    })
+  } catch (err: any) {
+    const msg = String(err?.message ?? '')
+    if (msg.includes('no such table') || msg.includes('PasswordResetToken')) {
+      return res.status(503).json({
+        error: 'Database not migrated',
+        hint: 'Run: npx prisma migrate dev (or migrate deploy) in backend/',
+      })
+    }
+    throw err
+  }
 
   await logAuditEvent({
     userId: user.id,
@@ -282,10 +296,7 @@ app.post('/api/password/forgot', async (req, res) => {
         return res.status(200).json({ ok: true, devToken: rawToken })
       }
 
-      await prisma.$executeRaw`
-        DELETE FROM "PasswordResetToken"
-        WHERE "tokenHash" = ${tokenHash}
-      `
+      await prisma.passwordResetToken.delete({ where: { tokenHash } })
 
       return res.status(200).json({ ok: true })
     }
@@ -307,16 +318,26 @@ app.post('/api/password/reset', async (req, res) => {
   const { token, newPassword } = parsed.data
   const tokenHash = sha256Hex(token)
 
-  type ResetRow = { id: number; userId: number }
-  const rows = await prisma.$queryRaw<ResetRow[]>`
-    SELECT "id", "userId"
-    FROM "PasswordResetToken"
-    WHERE "tokenHash" = ${tokenHash}
-      AND "usedAt" IS NULL
-      AND "expiresAt" > ${new Date()}
-    LIMIT 1
-  `
-  const record = rows[0]
+  let record: { id: number; userId: number } | null = null
+  try {
+    record = await prisma.passwordResetToken.findFirst({
+      where: {
+        tokenHash,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true, userId: true },
+    })
+  } catch (err: any) {
+    const msg = String(err?.message ?? '')
+    if (msg.includes('no such table') || msg.includes('PasswordResetToken')) {
+      return res.status(503).json({
+        error: 'Database not migrated',
+        hint: 'Run: npx prisma migrate dev (or migrate deploy) in backend/',
+      })
+    }
+    throw err
+  }
 
   if (!record) {
     return res.status(400).json({ error: 'Token inválido ou expirado' })
@@ -329,11 +350,10 @@ app.post('/api/password/reset', async (req, res) => {
       where: { id: record.userId },
       data: { passwordHash },
     }),
-    prisma.$executeRaw`
-      UPDATE "PasswordResetToken"
-      SET "usedAt" = ${new Date()}
-      WHERE "id" = ${record.id}
-    `,
+    prisma.passwordResetToken.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    }),
   ])
 
   await logAuditEvent({
