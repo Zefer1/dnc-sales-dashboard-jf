@@ -333,7 +333,6 @@ function Settings() {
         </Box>
       </CardComponent>
 
-      // ...existing code...
     </>
   )
 }
