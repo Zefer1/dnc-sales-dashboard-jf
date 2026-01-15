@@ -333,39 +333,7 @@ function Settings() {
         </Box>
       </CardComponent>
 
-      {isDev && (
-        <CardComponent>
-          <StyledP $weight={700} size={16} $lineheight={24}>
-            {t('sections.developer')}
-          </StyledP>
-
-          <Box sx={{ display: 'grid', gap: pxToRem(10), marginTop: pxToRem(12) }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
-              <StyledP color="#666">{t('developer.apiBase')}</StyledP>
-              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: pxToRem(8) }}>
-                <StyledP color="#666">{api.defaults.baseURL ?? '-'}</StyledP>
-                {api.defaults.baseURL && (
-                  <Button variant="text" size="small" onClick={() => void copyText(String(api.defaults.baseURL))}>
-                    {t('developer.copy')}
-                  </Button>
-                )}
-              </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
-              <StyledP color="#666">{t('developer.environment')}</StyledP>
-              <StyledP color="#666">{import.meta.env.MODE}</StyledP>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
-              <StyledP color="#666">{t('developer.user')}</StyledP>
-              <StyledP color="#666">
-                {auth?.user ? `${auth.user.name} (${auth.user.email})` : '-'}
-              </StyledP>
-            </Box>
-          </Box>
-        </CardComponent>
-      )}
+      // ...existing code...
     </>
   )
 }
