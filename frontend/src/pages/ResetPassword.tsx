@@ -1,7 +1,7 @@
 import { Box, Container, Grid } from '@mui/material'
-import { BannerImage, FormComponent, Logo, StyledH1, StyledP } from '@/components'
+import { BannerImage, FormComponent, Logo, StyledH1, StyledP, TurnstileWidget } from '@/components'
 import { pxToRem } from '@/utils'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '@/api/client'
@@ -16,20 +16,32 @@ function ResetPassword() {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { t } = useTranslation('auth')
-  const [searchParams] = useSearchParams()
-
-  const tokenFromQuery = searchParams.get('token')
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [manualStep, setManualStep] = useState<Step>('request')
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(undefined)
+  const [requestSent, setRequestSent] = useState(false)
 
   const [requestEmail, setRequestEmail] = useState('')
   const [tokenOverride, setTokenOverride] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const step: Step = tokenFromQuery ? 'reset' : manualStep
-  const token = tokenOverride ?? tokenFromQuery ?? ''
+  const step: Step = manualStep
+  const token = tokenOverride ?? ''
+
+  const turnstileSiteKey = String(import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '')
+
+  useEffect(() => {
+    const tokenParam = searchParams.get('token')
+    if (!tokenParam) return
+
+    setTokenOverride(tokenParam)
+    setManualStep('reset')
+    setSearchParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const requestInputs = useMemo(
     () => [
@@ -43,12 +55,16 @@ function ResetPassword() {
     [requestEmail, t]
   )
 
-  const requestValid = useMemo(() => /^\S+@\S+\.\S+$/.test(requestEmail), [requestEmail])
+  const requestValid = useMemo(() => {
+    const okEmail = /^\S+@\S+\.\S+$/.test(requestEmail)
+    const okCaptcha = turnstileSiteKey.length > 0 && captchaToken.length > 0
+    return okEmail && okCaptcha
+  }, [captchaToken, requestEmail, turnstileSiteKey])
 
   const resetInputs = useMemo(
     () => [
       {
-        type: 'text',
+        type: 'password',
         placeholder: t('reset.token'),
         value: token,
         onChange: (e: ChangeEvent<HTMLInputElement>) => setTokenOverride(e.target.value),
@@ -80,19 +96,34 @@ function ResetPassword() {
     const email = requestEmail
 
     try {
-      const res = await api.post('/api/password/forgot', { email })
+      if (!turnstileSiteKey) {
+        setStatusMessage({ msg: t('reset.captchaMisconfigured'), type: 'error' })
+        return
+      }
+
+      if (!captchaToken) {
+        setStatusMessage({ msg: t('reset.captchaRequired'), type: 'error' })
+        return
+      }
+
+      const res = await api.post('/api/password/forgot', { email, captchaToken })
 
       // API intentionally returns ok=true even when user doesn't exist.
       if (res.data?.devToken) {
         showToast(t('reset.devTokenGenerated'), 'success')
-        navigate(`/redefinir-senha?token=${encodeURIComponent(String(res.data.devToken))}`)
-        return
+        setTokenOverride(String(res.data.devToken))
       }
 
       showToast(t('reset.infoIfExists'), 'success')
-      setManualStep('reset')
-    } catch {
-      setStatusMessage({ msg: t('reset.errorRequest'), type: 'error' })
+      setRequestSent(true)
+      setCaptchaToken('')
+    } catch (err: any) {
+      const msg = String(err?.response?.data?.error ?? '')
+      if (msg.toLowerCase().includes('captcha')) {
+        setStatusMessage({ msg: t('reset.captchaInvalid'), type: 'error' })
+      } else {
+        setStatusMessage({ msg: t('reset.errorRequest'), type: 'error' })
+      }
     }
   }
 
@@ -147,6 +178,34 @@ function ResetPassword() {
                   ]}
                   message={statusMessage}
                 />
+
+                <Box sx={{ marginTop: pxToRem(16) }}>
+                  {turnstileSiteKey ? (
+                    <TurnstileWidget siteKey={turnstileSiteKey} onToken={setCaptchaToken} />
+                  ) : (
+                    <StyledP>{t('reset.captchaMisconfigured')}</StyledP>
+                  )}
+                </Box>
+
+                {requestSent && (
+                  <Box sx={{ marginTop: pxToRem(16) }}>
+                    <StyledP>{t('reset.infoIfExists')}</StyledP>
+                    <button
+                      type="button"
+                      onClick={() => setManualStep('reset')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        font: 'inherit',
+                      }}
+                    >
+                      {t('reset.haveToken')}
+                    </button>
+                  </Box>
+                )}
 
                 <Box sx={{ marginTop: pxToRem(16) }}>
                   <Link to="/login" style={{ textDecoration: 'underline' }}>

@@ -8,6 +8,7 @@ import crypto from 'node:crypto'
 import { z } from 'zod'
 import { PrismaClient } from '@prisma/client'
 import { canSendEmail, sendEmail } from './email/mailer'
+import { createRateLimiter } from './middleware/rateLimit'
 
 dotenv.config()
 
@@ -141,17 +142,84 @@ function sha256Hex(input: string) {
 }
 
 function shouldReturnDevToken() {
-  return process.env.NODE_ENV !== 'production'
+  if (process.env.NODE_ENV === 'production') {
+    return false
+  }
+
+  // Default: enabled in non-production for developer ergonomics.
+  // Set RETURN_DEV_PASSWORD_RESET_TOKEN=false to force "production-like" behavior locally.
+  return process.env.RETURN_DEV_PASSWORD_RESET_TOKEN?.toLowerCase() !== 'false'
 }
 
 function getPasswordResetLink(rawToken: string) {
-  const base = process.env.PASSWORD_RESET_BASE_URL ?? process.env.FRONTEND_URL
+  const base =
+    process.env.PASSWORD_RESET_BASE_URL ??
+    process.env.FRONTEND_URL ??
+    (shouldReturnDevToken() ? 'http://localhost:5173' : undefined)
   if (!base) {
     return null
   }
   const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base
   return `${normalizedBase}/redefinir-senha?token=${encodeURIComponent(rawToken)}`
 }
+
+async function verifyTurnstile(token: string, ip: string | undefined) {
+  if (process.env.NODE_ENV === 'test') {
+    return true
+  }
+
+  if (process.env.CAPTCHA_BYPASS?.toLowerCase() === 'true' && process.env.NODE_ENV !== 'production') {
+    return true
+  }
+
+  const secret = process.env.TURNSTILE_SECRET_KEY
+  if (!secret) {
+    // In production we want this to be an explicit misconfiguration.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Missing TURNSTILE_SECRET_KEY')
+    }
+    return false
+  }
+
+  if (!token) {
+    return false
+  }
+
+  const body = new URLSearchParams({
+    secret,
+    response: token,
+  })
+  if (ip) {
+    body.set('remoteip', ip)
+  }
+
+  const resp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body,
+  })
+
+  const json = (await resp.json()) as { success?: boolean }
+  return Boolean(json.success)
+}
+
+const forgotPasswordIpLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  key: (req) => String(req.ip ?? 'unknown'),
+})
+
+const forgotPasswordEmailLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  key: (req) => `email:${String((req.body as any)?.email ?? '').toLowerCase().trim()}`,
+})
+
+const resetPasswordIpLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  key: (req) => String(req.ip ?? 'unknown'),
+})
 
 app.post('/api/register', async (req, res) => {
   const jwtSecret = process.env.JWT_SECRET
@@ -225,13 +293,24 @@ app.post('/api/login', async (req, res) => {
   })
 })
 
-app.post('/api/password/forgot', async (req, res) => {
+app.post('/api/password/forgot', forgotPasswordIpLimiter, forgotPasswordEmailLimiter, async (req, res) => {
   const parsed = forgotPasswordSchema.safeParse(req.body)
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   }
 
   const { email } = parsed.data
+  const captchaToken = String((req.body as any)?.captchaToken ?? '')
+
+  try {
+    const ok = await verifyTurnstile(captchaToken, req.ip)
+    if (!ok) {
+      return res.status(400).json({ error: 'Invalid captcha' })
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Captcha misconfigured' })
+  }
+
   const user = await prisma.user.findUnique({ where: { email } })
 
   // Always return 200 to avoid email enumeration.
@@ -244,6 +323,9 @@ app.post('/api/password/forgot', async (req, res) => {
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000)
 
   try {
+    // Invalidate any previous tokens for this user.
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } })
+
     await prisma.passwordResetToken.create({
       data: {
         tokenHash,
@@ -267,11 +349,11 @@ app.post('/api/password/forgot', async (req, res) => {
     action: 'PASSWORD_RESET_REQUEST',
     entityType: 'User',
     entityId: user.id,
-    metadata: { email },
+    metadata: { email, ip: req.ip, userAgent: req.get('user-agent') },
   })
 
   const resetLink = getPasswordResetLink(rawToken)
-  const canEmail = Boolean(resetLink) && canSendEmail()
+  const canEmail = process.env.NODE_ENV !== 'test' && Boolean(resetLink) && canSendEmail()
 
   if (canEmail) {
     try {
@@ -289,7 +371,12 @@ app.post('/api/password/forgot', async (req, res) => {
       })
 
       return res.status(200).json({ ok: true })
-    } catch {
+    } catch (err) {
+      if (shouldReturnDevToken()) {
+        // eslint-disable-next-line no-console
+        console.error('Password reset email failed to send:', err)
+      }
+
       // In production, keep response generic and discard the token.
       // In non-production, return a dev token so local development can continue.
       if (shouldReturnDevToken()) {
@@ -309,7 +396,7 @@ app.post('/api/password/forgot', async (req, res) => {
   return res.status(200).json({ ok: true })
 })
 
-app.post('/api/password/reset', async (req, res) => {
+app.post('/api/password/reset', resetPasswordIpLimiter, async (req, res) => {
   const parsed = resetPasswordSchema.safeParse(req.body)
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
@@ -356,11 +443,15 @@ app.post('/api/password/reset', async (req, res) => {
     }),
   ])
 
+  // Remove any remaining tokens for the user after a successful reset.
+  await prisma.passwordResetToken.deleteMany({ where: { userId: record.userId } })
+
   await logAuditEvent({
     userId: record.userId,
     action: 'PASSWORD_RESET',
     entityType: 'User',
     entityId: record.userId,
+    metadata: { ip: req.ip, userAgent: req.get('user-agent') },
   })
 
   return res.status(200).json({ ok: true })

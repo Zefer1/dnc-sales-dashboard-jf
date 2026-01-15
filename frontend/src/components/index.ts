@@ -1,3 +1,4 @@
+export { TurnstileWidget } from './TurnstileWidget';
 export { default as AvatarsList } from './AvatarList';
 export { default as CustomChart } from './CustomChart';
 export { default as CustomTable } from './CustomTable';
