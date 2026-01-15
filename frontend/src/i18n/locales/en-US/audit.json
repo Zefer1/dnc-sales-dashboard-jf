@@ -8,7 +8,10 @@
   "buttons": {
     "refresh": "Refresh",
     "details": "Details",
-    "close": "Close"
+    "close": "Close",
+    "copyJson": "Copy JSON",
+    "showRaw": "Show raw",
+    "hideRaw": "Hide raw"
   },
   "headers": {
     "when": "When",
@@ -18,9 +21,33 @@
   },
   "dialog": {
     "title": "Details",
-    "eventLabel": "Event"
+    "summary": "Summary",
+    "metadata": "Metadata",
+    "before": "Before",
+    "after": "After",
+    "empty": "(empty)",
+    "eventLabel": "Raw event"
+  },
+  "actions": {
+    "PASSWORD_RESET_REQUEST": "Password reset requested",
+    "PASSWORD_RESET": "Password reset",
+    "PASSWORD_CHANGE": "Password changed",
+    "USER_UPDATE": "Profile updated",
+    "LEAD_CREATE": "Lead created",
+    "LEAD_UPDATE": "Lead updated",
+    "LEAD_DELETE": "Lead deleted",
+    "LEAD_IMPORT": "Leads imported"
+  },
+  "entities": {
+    "User": "User",
+    "Lead": "Lead"
   },
   "messages": {
-    "loadFail": "Failed to load audit"
+    "loadFail": "Failed to load audit",
+    "copied": "Copied",
+    "copyFail": "Could not copy"
+  },
+  "labels": {
+    "you": "You"
   }
 }

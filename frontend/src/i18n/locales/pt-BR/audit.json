@@ -8,7 +8,10 @@
   "buttons": {
     "refresh": "Atualizar",
     "details": "Detalhes",
-    "close": "Fechar"
+    "close": "Fechar",
+    "copyJson": "Copiar JSON",
+    "showRaw": "Mostrar bruto",
+    "hideRaw": "Ocultar bruto"
   },
   "headers": {
     "when": "Quando",
@@ -18,9 +21,33 @@
   },
   "dialog": {
     "title": "Detalhes",
-    "eventLabel": "Evento"
+    "summary": "Resumo",
+    "metadata": "Metadados",
+    "before": "Antes",
+    "after": "Depois",
+    "empty": "(vazio)",
+    "eventLabel": "Evento (raw)"
+  },
+  "actions": {
+    "PASSWORD_RESET_REQUEST": "Pedido de redefinição de senha",
+    "PASSWORD_RESET": "Senha redefinida",
+    "PASSWORD_CHANGE": "Senha alterada",
+    "USER_UPDATE": "Perfil atualizado",
+    "LEAD_CREATE": "Lead criado",
+    "LEAD_UPDATE": "Lead atualizado",
+    "LEAD_DELETE": "Lead removido",
+    "LEAD_IMPORT": "Leads importados"
+  },
+  "entities": {
+    "User": "Usuário",
+    "Lead": "Lead"
   },
   "messages": {
-    "loadFail": "Falha ao carregar auditoria"
+    "loadFail": "Falha ao carregar auditoria",
+    "copied": "Copiado",
+    "copyFail": "Não foi possível copiar"
+  },
+  "labels": {
+    "you": "Você"
   }
 }

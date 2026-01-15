@@ -28,6 +28,8 @@ function Settings() {
   const { t } = useTranslation('settings')
   const { t: tCommon } = useTranslation('common')
 
+  const isDev = import.meta.env.DEV
+
   const authHeaders = useMemo(() => {
     const token = auth?.token
     return token ? { Authorization: `Bearer ${token}` } : {}
@@ -117,6 +119,18 @@ function Settings() {
     savePrefs(loadPrefs())
     toast.showToast(t('privacy.cleared'), 'success')
   }, [toast, t])
+
+  const copyText = useCallback(
+    async (value: string) => {
+      try {
+        await navigator.clipboard.writeText(value)
+        toast.showToast(t('developer.copied'), 'success')
+      } catch {
+        toast.showToast(t('developer.copyFail'), 'error')
+      }
+    },
+    [toast, t]
+  )
 
   return (
     <>
@@ -319,20 +333,39 @@ function Settings() {
         </Box>
       </CardComponent>
 
-      <CardComponent>
-        <StyledP $weight={700} size={16} $lineheight={24}>
-          {t('sections.developer')}
-        </StyledP>
+      {isDev && (
+        <CardComponent>
+          <StyledP $weight={700} size={16} $lineheight={24}>
+            {t('sections.developer')}
+          </StyledP>
 
-        <Box sx={{ display: 'grid', gap: pxToRem(8), marginTop: pxToRem(12) }}>
-          <StyledP color="#666">
-            {t('developer.apiBase')}: {api.defaults.baseURL}
-          </StyledP>
-          <StyledP color="#666">
-            {t('developer.userId')}: {auth?.user?.id ?? '-'}
-          </StyledP>
-        </Box>
-      </CardComponent>
+          <Box sx={{ display: 'grid', gap: pxToRem(10), marginTop: pxToRem(12) }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
+              <StyledP color="#666">{t('developer.apiBase')}</StyledP>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: pxToRem(8) }}>
+                <StyledP color="#666">{api.defaults.baseURL ?? '-'}</StyledP>
+                {api.defaults.baseURL && (
+                  <Button variant="text" size="small" onClick={() => void copyText(String(api.defaults.baseURL))}>
+                    {t('developer.copy')}
+                  </Button>
+                )}
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
+              <StyledP color="#666">{t('developer.environment')}</StyledP>
+              <StyledP color="#666">{import.meta.env.MODE}</StyledP>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: pxToRem(12), flexWrap: 'wrap' }}>
+              <StyledP color="#666">{t('developer.user')}</StyledP>
+              <StyledP color="#666">
+                {auth?.user ? `${auth.user.name} (${auth.user.email})` : '-'}
+              </StyledP>
+            </Box>
+          </Box>
+        </CardComponent>
+      )}
     </>
   )
 }

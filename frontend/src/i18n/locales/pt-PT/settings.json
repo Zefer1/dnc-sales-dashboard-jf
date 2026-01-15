@@ -57,7 +57,11 @@
     "logout": "Logout"
   },
   "developer": {
-    "apiBase": "API base",
-    "userId": "User ID"
+    "apiBase": "Endpoint da API",
+    "environment": "Ambiente",
+    "user": "Utilizador autenticado",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyFail": "Não foi possível copiar"
   }
 }
