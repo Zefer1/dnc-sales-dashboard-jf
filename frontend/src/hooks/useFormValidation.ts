@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { InputProps } from '@/types'
 
 export const useFormValidation = (inputs: InputProps[]) => {
 	const [formValues, setFormValues] = useState(inputs.map((input) => input.value || ''))
-	const [formValid, setFormValid] = useState(false)
 
-	useEffect(() => {
-		const allFieldsValid = inputs.every((input, index) => {
+	const formValid = useMemo(() => {
+		return inputs.every((input, index) => {
 			if (input.type === 'email') {
 				return /^\S+@\S+\.\S+$/.test(String(formValues[index]))
 			}
@@ -17,8 +16,6 @@ export const useFormValidation = (inputs: InputProps[]) => {
 
 			return true
 		})
-
-		setFormValid(allFieldsValid)
 	}, [formValues, inputs])
 
 	const handleChange = (index: number, value: string) => {

@@ -162,7 +162,7 @@ function Leads() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     if (!auth?.token) return
     setDeletingId(id)
     try {
@@ -177,7 +177,7 @@ function Leads() {
     } finally {
       setDeletingId(null)
     }
-  }
+  }, [auth?.token, authHeaders, toast, t])
 
   const openEdit = (lead: Lead) => {
     setEditingLead(lead)
@@ -426,7 +426,7 @@ function Leads() {
         </Box>,
       ]
     })
-  }, [filteredLeads, deletingId, updatingId, t])
+  }, [filteredLeads, deletingId, updatingId, t, handleDelete])
 
   const tableHeaders = useMemo(
     () => [t('headers.name'), t('headers.contact'), t('headers.source'), t('headers.createdAt'), t('headers.actions')],

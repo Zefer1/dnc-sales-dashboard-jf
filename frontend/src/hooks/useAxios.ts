@@ -29,8 +29,12 @@ export const usePost = <T, P>(endpoint: string) => {
       })
 
       setData(response.data)
-    } catch (e: any) {
-      setError(e.response?.status ?? 500)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.status ?? 500)
+      } else {
+        setError(500)
+      }
     } finally {
       setLoading(false)
     }

@@ -6,8 +6,7 @@
     "appearance": "Aparência",
     "language": "Idioma e formatos",
     "notifications": "Notificações",
-    "privacy": "Privacidade",
-    "developer": "Developer"
+    "privacy": "Privacidade"
   },
   "account": {
     "email": "Email",
@@ -55,13 +54,5 @@
     "clearLocal": "Limpar dados locais",
     "cleared": "Preferências locais limpas",
     "logout": "Logout"
-  },
-  "developer": {
-    "apiBase": "Endpoint da API",
-    "environment": "Ambiente",
-    "user": "Utilizador autenticado",
-    "copy": "Copiar",
-    "copied": "Copiado",
-    "copyFail": "Não foi possível copiar"
   }
 }

@@ -1,4 +1,5 @@
 import { Box, Container, Grid } from '@mui/material'
+import axios from 'axios'
 import { BannerImage, FormComponent, Logo, StyledH1, StyledP, TurnstileWidget } from '@/components'
 import { pxToRem } from '@/utils'
 import { useEffect, useMemo, useState } from 'react'
@@ -117,8 +118,8 @@ function ResetPassword() {
       showToast(t('reset.infoIfExists'), 'success')
       setRequestSent(true)
       setCaptchaToken('')
-    } catch (err: any) {
-      const msg = String(err?.response?.data?.error ?? '')
+    } catch (err) {
+      const msg = axios.isAxiosError(err) ? String(err.response?.data?.error ?? '') : ''
       if (msg.toLowerCase().includes('captcha')) {
         setStatusMessage({ msg: t('reset.captchaInvalid'), type: 'error' })
       } else {

@@ -6,8 +6,7 @@
     "appearance": "Appearance",
     "language": "Language & formats",
     "notifications": "Notifications",
-    "privacy": "Privacy",
-    "developer": "Developer"
+    "privacy": "Privacy"
   },
   "account": {
     "email": "Email",
@@ -55,13 +54,5 @@
     "clearLocal": "Clear local data",
     "cleared": "Local preferences cleared",
     "logout": "Logout"
-  },
-  "developer": {
-    "apiBase": "API endpoint",
-    "environment": "Environment",
-    "user": "Signed-in user",
-    "copy": "Copy",
-    "copied": "Copied",
-    "copyFail": "Could not copy"
   }
 }

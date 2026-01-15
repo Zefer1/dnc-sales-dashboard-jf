@@ -28,8 +28,6 @@ function Settings() {
   const { t } = useTranslation('settings')
   const { t: tCommon } = useTranslation('common')
 
-  const isDev = import.meta.env.DEV
-
   const authHeaders = useMemo(() => {
     const token = auth?.token
     return token ? { Authorization: `Bearer ${token}` } : {}
@@ -119,18 +117,6 @@ function Settings() {
     savePrefs(loadPrefs())
     toast.showToast(t('privacy.cleared'), 'success')
   }, [toast, t])
-
-  const copyText = useCallback(
-    async (value: string) => {
-      try {
-        await navigator.clipboard.writeText(value)
-        toast.showToast(t('developer.copied'), 'success')
-      } catch {
-        toast.showToast(t('developer.copyFail'), 'error')
-      }
-    },
-    [toast, t]
-  )
 
   return (
     <>

@@ -106,7 +106,7 @@ function Home() {
         subtitle: parts,
       }
     })
-  }, [data?.recentLeads])
+  }, [data?.recentLeads, t])
 
   const translatedTableHeaders = useMemo(
     () => [t('table.name'), t('table.contact'), t('table.source'), t('table.actions')],
