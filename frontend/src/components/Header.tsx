@@ -74,7 +74,7 @@ function Header() {
 					}}
 				>
 					<Link to={isAuthed ? '/home' : '/'} aria-label="Ir para página inicial">
-						<Logo height={30} width={73} />
+						<Logo height={44} width={120} />
 					</Link>
 
 					{isMobile ? (
